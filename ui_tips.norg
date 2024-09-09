@@ -4,7 +4,7 @@ description:
 authors: vincent_liu
 categories: 
 created: 2024-06-14T20:32:52-0500
-updated: 2024-06-14T20:56:27-0500
+updated: 2024-06-19T15:29:23-0500
 version: 1.1.1
 @end
 
@@ -13,5 +13,5 @@ version: 1.1.1
 ~ For anything that spans more than 3 lines, go for text left instead of center.
 ~ Body text: 50 to 75 characters, or about 600px on desktop.
 ~ Try to stick with 2 font sizes, and use font weights and subtle color changes to indicate hierarchy.
-~  For white spaces, consider the relationships. More related elements are closer.
+~ For white spaces, consider the relationships. More related elements are closer.
 
