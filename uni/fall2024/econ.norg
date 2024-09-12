@@ -32,6 +32,13 @@ At every stage:
 ~~ politicians
 ~ Expand the basic theories to cover more areas and in greater depth
 
+
+About the conference
+Look at the questions first, 
+think about the answers first
+
+Try the questions, and if you don't understand the answers go to the conference
+
 * Microeconomics review (chapter 4)
 ** Circular flow chard of income and expenditure
    There's injection and and extraction (withdrawal) into the system
@@ -44,9 +51,64 @@ At every stage:
    - Real national income: Value of value output at some base-period
 
    Unless specified, the text refers to real GDP
-   - Reel econ growth means real GDP increases
+   - Real econ growth means real GDP increases
    - Real per capita econ growth means real GPD per person increases
    - But it's an average, some individual may actually be worse off
 
+   - GDP: Gross domestic product
 
+   When it comes to gdp, you need to sum all the steps to get the final value.
+
+   - Employment (E): the number of workers (15+) who hold jobs.
+   - Unemployment (U): the number (+15) not employed but actively looking for a job.
+   - Hidden unemployment: not employed but not looking for a job
+   - Labour force (LF): E + U
+   
+   - Unemployment rate: percentage -> U / (L + U)
+
+   The number of U can increase even if U rate unchanged
+
+   Employment has grown roughly in line with with growth in the labour force.
+
+   - Productivity: output per unit of input
+   -- usually as (real) GPD per worker
+   -- or (real) GPD per hour of work
+
+   Increases in prod, probably single largest cause of LR increases in the Standard of Living:
+   -  new & better technology
+   - improvement in skills (education)
+
+   - P level: average level of all prices expressed as an index number
+   - Inflation: % inc in price level.
+   - Consumer Price Index (CPI): most used measure for inflation, it is a weighted average based on the proportions of total income spent on the goods we get
+
+   The inflation hurts people on fixed income (rule of 72), and reduces real value of things with a fixed price.
+   Inflation also creates expectations of further inflation, which affects other behavior (e.g. U.S. house prices & savings rate)
+
+   High inflation was hurting low-income households more than high-income ones!:
+   - Low-income households have greater weights on necessities (such as food, gas and rent), that had greater-than-average inflation rate
+
+   - Middle-income households substituted cheaper goods and generic brands. Low-income households are more likely to be already consuming the cheapest products.
+
+   - Interest rate: expressed in money terms
+   - Read Interest rate: expressed in terms of purchasing power
+
+   The effects of inflation on borrowers & lenders depends on the real interest rate. In 'real' terms, unanticipated inflation hurst the lender and benefits the borrower
+
+   - Foreign exchange: foreign currencies ( or claims on foreign currencies)
+   - exchange rate: number of CAD to buy/sell unit of foreign currency. June 2021: \$1 buy 0.68 euros, or 1 euro cost 1.47 \$
+   -- CAD worth less on foreign exchange market
+   -- A rise in the exchange rate takes more CAD to buy unit of foreign currency.
+   -- DOmestic P of Canada's imports rises, foreign price of Canada's exports falls.
+
+
+
+** Who are the unemployed?
+   - they are available for work and, 
+   - have actively searched for a job in the last 4 weeks (definition of 'actively' differs by country)
+
+** Why does unemployment matter
+   Crime, mental illness, and general social unrest tend to be associated with long-term unemployment.
+   - Some U is *desirable*: e.g. reflects time needed for workers & firms to "find" each other - so good matches are made.
+   - Some U associated with *human hardship*: e.g. *structural* is longer-term U (usually long-term) caused by mismatch between skills of Ued & those required to fill vacancies - not in demand by firms
 

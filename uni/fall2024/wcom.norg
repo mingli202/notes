@@ -1,2 +1,85 @@
-* Sept 3 2024
-  Shibboleth: anything that could be use to immediately pinpoint something.
+_Sept 3 2024_
+
+Shibboleth: anything that could be use to immediately pinpoint something.
+
+Definition Basics:
+- _Lexical_: Often called a Nominal or reportive definition; propositional phrase that articulates the primary existing meaning for a term, or a key conventionalized meaning.
+
+- _Stipulative_: propositional phrase that assigns a new or specific meaning to a term, phrase, or acronym. Often establishing what the definiendum (the term defined) shall refer to in a given document.
+
+- _Precising_: propositional phrase aims to clarify and refine a term for a; could be regarded as a combination of a lexical and stipulative, but stipulating that a specific lexical meaning will be adopted or agreed upon 
+
+- _Parenthetical_: briefly explain a term in a single word or phrase, usually as a synonym in parentheses (brackets).
+
+- _Extended_: on-going description and clarification of a term or concept, featuring both a proper definition phrase, as well as various clarifying remarks, examples, analogies or etymological details.
+
+- _Conceptual_: identifies the concept itself (rather than the term we ascribe to it) and attempts to delineate precisely what its conditions are.
+
+- _Persuasive_: sometimes called an argumentative definition
+- Argumentative: type of definition phrase which attached some kind of emotive, valuative or derogatory meaning to a term (usually as part of an argument).
+
+- Categorical: maybe seek to categorize the term.
+
+- Technical: usually reportive or stipulative; explains the term in its technical context
+
+- Operational: variation on Technical definition.
+
+- Dictionary: usually a nominal definition; may adopt a conventionalized form that lacks propositional structure. Usually reports the meanings for grammatical forms and variations of a given /lexeme/ or lexical item; particularly case and conjugational derivations, or colloquial and historical uses.
+
+* Definition Writing exercise:
+** Identify the Type of Definition
+   1. Science is the practice by which (an) investigator(s) observe a phenomenon, then forms a hypothesis that explains said phenomenon and in theoretically simplified form, from which they then test the credibility of that hypothesis through additional observations (particularly under controlled conditions).
+
+   -- Lexical: Lexical means defining a term.
+   -- *Stipulative*: The definition is defining what science is.
+   -- *Technical*: The definition defines what is science and with through what kind of logical reasoning one draws a conclusion.
+   -- *Operational*: The definition defines how science is used; namely it is a method used to process information and make sense of the complex world that we live in.
+   -- -*Parenthetical*: At the end of the definition there is a small parentheses that add precision to the word before.-
+
+   2. An oracle computer (or Oracle Turing Machine) is an abstract computational system that is capable of predicting whether a computer program will halt, without running that program. It is employed in computational theory, complexity theory and cognitive science in order to study decision problems, undecidability, and questions of computability (particularly the Church-Turning Thesis). It is (minimally) envisioned as a Turing Machine with an added‘Oracle box’.
+
+   -- Lexical + extended
+   -- -*Stipulative*: The definition gives a new meaning to "oracle computer".-
+   -- *Technical:* The definition defines the term in the context of computer programs.
+
+** Identify the parts of the definition 
+   1. A _Death Star_ \[term\] _is_ \[copula\] an _artificial planetoidal space station_ \[class\] _built to hosts a kyber-crystal-based super laser capable of emitting enough power to destroy a planet_ \[disambiguation\] _(approximately 6.2 *10^32 J/s of power)_ \[parenthetical\]
+
+   2. _In the Star Wars fictional universe_ \[context\], the _first Death Star_ \[term\] _(designation; DS-1 Orbital Battle Station)_ \[parenthetical\] _was_ \[copula\] an _artificial space station and superweapon_ \[class\] _destroyed by Luke Skywalker at the Battle of Yavin._ \[disambiguation\]
+
+** Identify some problems with the following definition, and correct it
+   ~ The definition is ambiguous because it does not specify the nature of "five" and "seven." Moreover, it does not specify in what numerical base system they are using as well as the order of the comparison.
+     "When considering the ascending order of the decimal system, the number Six is an integer that comes after the integer Five and before the integer Seven"
+   ~ The usage if the word "refer" is incorrect. "Artificial Intelligence" does not refer to a technology, but _is_ a technology itself. Moreover, it is not "any" piece of technology since it is too vague. "Intelligence behaviour" is also imprecise because there are many types of intelligence and behaviour. Furthermore, simulating intelligence without actually exhibiting it makes no sense.
+     "Artificial Intelligence is a computer program that attempts to mimic human intelligence and behaviour in various different tasks in order to simplify the tasks for humans."
+
+** Identify an object/concept that is captured by the following definitions, but does not belong. (What else is wrong with these definitions?
+   ~ Biology is the term defined. In the definition, "behaviour" does not belong because it is not precise enough. There are many types of behaviour, and some do not belong in biology.
+   ~ Autism is the term defined. In the definition, "other issues that are typically observed to impair function in school, work, and daily life" is not precise and can therefore mean anything.
+
+** Identify an object/concept that is NOT captured by the following definitions, but should be included. (What else is wrong with this definition
+   ~ The definition should specify that dragons are mythical creatures that don't exist.
+   ~ The definition has two definitions, one in the context of human anatomy and the other in the context of the structure of a book.
+
+* Enumerate sufficient conditions
+  - Bicycle:
+  -- vehicule
+  -- two handles
+  -- two pedals
+  -- has to move forward by pedalling
+  -- has a seat
+  -- is human powered
+
+  - Surfing:
+  -- Act of riding a wave of -water- fluid
+  -- Use a board
+  -- Standing on a board
+
+* Provide the most precise and accurate conceptual definition for two of the concepts listed
+  - Bicycle: A bicycle is vehicule that moves by -pedalling two pedals-. It is made up of -two handles-, -a seat-, and two primary wheels where one is in front and the other in the back.
+  - Surfing: Surfing is the act of riding a board on water with a non-zero velocity.
+
+  ---
+
+Try to avoid negative features because there are an infinite of them
+Etymological fallacy: the usage of the etymological nature of a word to define it
