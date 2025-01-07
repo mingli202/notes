@@ -8,7 +8,5 @@ updated: 2024-06-28T19:32:46-0500
 version: 1.1.1
 @end
 
-* Install libraries and other things to be removed:
+* Installed libraries and other things to be removed:
   - cJSON: c header file installed in /usr/local/include/
-
-  asdfasdf
