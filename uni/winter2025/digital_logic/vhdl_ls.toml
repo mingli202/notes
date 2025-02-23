@@ -1,0 +1,7 @@
+[libraries]
+lib1.files = [
+	'./lab1/or_gate.vhd',
+	'./lab1/test_or.vhd',
+	'./lab1/test_xnor.vhd',
+	'./lab1/xnor_gate.vhd',
+]
