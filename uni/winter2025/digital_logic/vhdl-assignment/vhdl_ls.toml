@@ -1,0 +1,3 @@
+[libraries]
+lab2.files = ['lab2/*.vhd', 'lab2/*.vht']
+lab3.files = ['lab3/*.vhd']
