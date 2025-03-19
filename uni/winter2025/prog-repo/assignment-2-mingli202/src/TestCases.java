@@ -671,6 +671,17 @@ public class TestCases {
   }
 
   @Test
+  @Order(7)
+  void deckTripleCutSize2() {
+    D deck = new D();
+    deck.addCard(deck.new PlayingCard("clubs", 1));
+    deck.addCard(deck.new PlayingCard("clubs", 2));
+    deck.tripleCut(deck.head, deck.head.prev);
+
+    assertEquals("D (2) [AC, 2C]", deck.toString());
+  }
+
+  @Test
   @Order(8)
   void deckCountCut() {
     D deck = new D(6, 1);
@@ -704,6 +715,16 @@ public class TestCases {
     assertEquals("D (12) [4C, 5C, 6C, RJ, 7C, 9C, JC, BJ, AC, 2C, 3C, KS]",
                  deck.toString(), "Count cut 52 cards, same as 4");
     fowardAndBackwardLoop(deck);
+  }
+
+  @Test
+  @Order(8)
+  void deckCountCut1Card() {
+    D deck = new D(6, 1);
+    deck.head = deck.head.next;
+    assertEquals("D (8) [2C, 3C, 4C, 5C, 6C, RJ, BJ, AC]", deck.toString());
+    deck.countCut();
+    assertEquals("D (8) [3C, 4C, 5C, 6C, RJ, BJ, 2C, AC]", deck.toString());
   }
 
   @Test
