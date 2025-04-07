@@ -111,8 +111,5 @@ hs_err_pid*
 replay_pid*
 
 build
-.DS_Store
 lib
-Main.java
-TestCases.java
-A2_MiniTester.java
+.DS_Store

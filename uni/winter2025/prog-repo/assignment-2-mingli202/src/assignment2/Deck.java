@@ -227,6 +227,10 @@ public class Deck {
    * then the method should not do anything. This method runs in O(n).
    */
   public void countCut() {
+    if (this.numOfCards < 2) {
+      return;
+    }
+
     Card it = this.head;
     Card head = this.head;
     Card tail = this.head.prev;
