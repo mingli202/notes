@@ -82,8 +82,8 @@ public class ReleasedHiddenTester {
     }
 
     assertEquals(58, frameBorderBlocks,
-                 "getBlocksToDraw() is returning incorrect number of " +
-                 "FRAME_COLOR blocks.");
+                 "getBlocksToDraw() is returning incorrect number of "
+                     + "FRAME_COLOR blocks.");
     assertEquals(
         13, red,
         "getBlocksToDraw() is returning incorrect number of RED blocks.");
@@ -137,8 +137,9 @@ public class ReleasedHiddenTester {
       }
     }, "Took too long / Infinite loop");
 
-    assertNull(selectedBlock[0], "getSelectedBlock() is not returning null " +
-                                 "when the position is outside the block.");
+    assertNull(selectedBlock[0], "getSelectedBlock() is not returning null "
+                                     +
+                                     "when the position is outside the block.");
   }
   @Test
   @Tag("score:1")
@@ -169,8 +170,8 @@ public class ReleasedHiddenTester {
     );
 
     assertTrue(HelperMethods.equals(reference, toRotate),
-               "rotate() is changing size/coordinates when the rotation is " +
-               "not possible.");
+               "rotate() is changing size/coordinates when the rotation is "
+                   + "not possible.");
   }
 
   @Test
@@ -217,8 +218,8 @@ public class ReleasedHiddenTester {
     for (Color[] colors : c[0]) {
       for (Color color : colors) {
         assertEquals(GameColors.BLUE, color,
-                     "flatten() is not returning the block colors in the " +
-                     "correct order.");
+                     "flatten() is not returning the block colors in the "
+                         + "correct order.");
       }
     }
   }

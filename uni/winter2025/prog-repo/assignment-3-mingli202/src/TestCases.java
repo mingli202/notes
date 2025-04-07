@@ -14,6 +14,68 @@ public class TestCases {
 
   private Field childrenField; // {UR, UL, LL, LR}
 
+  public static Block getMap(int size) { // TODO: remove this
+    Block root = new Block(
+        0, 0, size * 16 / 16, 0, 3, null,
+        new Block[] {
+            new Block(size * 8 / 16, 0, size * 8 / 16, 1, 3, GameColors.YELLOW,
+                      new Block[0]),
+            new Block(
+                0, 0, size * 8 / 16, 1, 3, null,
+                new Block[] {
+                    new Block(size * 4 / 16, 0, size * 4 / 16, 2, 3,
+                              GameColors.YELLOW, new Block[0]),
+                    new Block(0, 0, size * 4 / 16, 2, 3, GameColors.BLUE,
+                              new Block[0]),
+                    new Block(0, size * 4 / 16, size * 4 / 16, 2, 3, null,
+                              new Block[] {
+                                  new Block(size * 2 / 16, size * 4 / 16,
+                                            size * 2 / 16, 3, 3,
+                                            GameColors.YELLOW, new Block[0]),
+                                  new Block(0, size * 4 / 16, size * 2 / 16, 3,
+                                            3, GameColors.BLUE, new Block[0]),
+                                  new Block(0, size * 6 / 16, size * 2 / 16, 3,
+                                            3, GameColors.RED, new Block[0]),
+                                  new Block(size * 2 / 16, size * 6 / 16,
+                                            size * 2 / 16, 3, 3,
+                                            GameColors.GREEN, new Block[0]),
+                              }),
+                    new Block(size * 4 / 16, size * 4 / 16, size * 4 / 16, 2, 3,
+                              GameColors.GREEN, new Block[0]),
+                }),
+            new Block(0, size * 8 / 16, size * 8 / 16, 1, 3, GameColors.RED,
+                      new Block[0]),
+            new Block(
+                size * 8 / 16, size * 8 / 16, size * 8 / 16, 1, 3, null,
+                new Block[] {
+                    new Block(size * 12 / 16, size * 8 / 16, size * 4 / 16, 2,
+                              3, null,
+                              new Block[] {
+                                  new Block(size * 14 / 16, size * 8 / 16,
+                                            size * 2 / 16, 3, 3,
+                                            GameColors.YELLOW, new Block[0]),
+                                  new Block(size * 12 / 16, size * 8 / 16,
+                                            size * 2 / 16, 3, 3,
+                                            GameColors.BLUE, new Block[0]),
+                                  new Block(size * 12 / 16, size * 10 / 16,
+                                            size * 2 / 16, 3, 3, GameColors.RED,
+                                            new Block[0]),
+                                  new Block(size * 14 / 16, size * 10 / 16,
+                                            size * 2 / 16, 3, 3,
+                                            GameColors.GREEN, new Block[0]),
+                              }),
+                    new Block(size * 8 / 16, size * 8 / 16, size * 4 / 16, 2, 3,
+                              GameColors.BLUE, new Block[0]),
+                    new Block(size * 8 / 16, size * 12 / 16, size * 4 / 16, 2,
+                              3, GameColors.RED, new Block[0]),
+                    new Block(size * 12 / 16, size * 12 / 16, size * 4 / 16, 2,
+                              3, GameColors.GREEN, new Block[0]),
+                }),
+        });
+
+    return root;
+  }
+
   @BeforeEach
   void setUp() throws NoSuchFieldException, IllegalAccessException {
     Block.gen.setSeed(2);
@@ -115,7 +177,7 @@ public class TestCases {
   @Test
   void blockGetSelectedBlock() {
     // 0 - 16
-    Block root = Block.getMap(16);
+    Block root = getMap(16);
 
     assertNull(root.getSelectedBlock(-1, 10, 0));
     assertEquals(root, root.getSelectedBlock(10, 10, 0));

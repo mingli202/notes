@@ -15,13 +15,17 @@ public class PerimeterGoal extends Goal {
     int score = 0;
 
     for (int i = 0; i < map.length; i++) {
-      score += map[i][0].equals(this.targetGoal) ? 1 : 0;
-      score += map[i][map[0].length - 1].equals(this.targetGoal) ? 1 : 0;
+      if (map[0].length > 0) {
+        score += map[i][0].equals(this.targetGoal) ? 1 : 0;
+        score += map[i][map[0].length - 1].equals(this.targetGoal) ? 1 : 0;
+      }
     }
 
-    for (int k = 0; k < map[0].length; k++) {
-      score += map[0][k].equals(this.targetGoal) ? 1 : 0;
-      score += map[map.length - 1][k].equals(this.targetGoal) ? 1 : 0;
+    if (map.length > 0) {
+      for (int k = 0; k < map[0].length; k++) {
+        score += map[0][k].equals(this.targetGoal) ? 1 : 0;
+        score += map[map.length - 1][k].equals(this.targetGoal) ? 1 : 0;
+      }
     }
 
     return score;

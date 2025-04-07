@@ -14,7 +14,7 @@ public class Block {
 
   private Block[] children; // {UR, UL, LL, LR}
 
-  public static Random gen = new Random(); // TODO: remove seed
+  public static Random gen = new Random();
 
   /*
    * These two constructors are here for testing purposes.
@@ -196,43 +196,30 @@ public class Block {
       throw new IllegalArgumentException("invalid direction");
     }
 
-    ArrayList<Block> blocks = new ArrayList<Block>(); // stack
-    blocks.add(this);
+    if (this.children.length == 0) {
+      return;
+    }
 
-    while (!blocks.isEmpty()) {
-      Block b = blocks.removeLast();
+    if (direction == 0) { // x-axis
+      Block tpm = this.children[3];
+      this.children[3] = this.children[0];
+      this.children[0] = tpm;
+      tpm = this.children[1];
+      this.children[1] = this.children[2];
+      this.children[2] = tpm;
+    } else { // y-axis
+      Block tpm = this.children[1];
+      this.children[1] = this.children[0];
+      this.children[0] = tpm;
+      tpm = this.children[2];
+      this.children[2] = this.children[3];
+      this.children[3] = tpm;
+    }
 
-      for (Block child : b.children) {
-        blocks.add(child);
-      }
+    this.updateSizeAndPosition(this.size, this.xCoord, this.yCoord);
 
-      if (direction == 0) { // x-axis
-        // reflect itself
-        b.yCoord = this.yCoord + this.size - (b.yCoord - this.yCoord) - b.size;
-
-        // swap children to keep the right grid order
-        if (b.children.length > 0) {
-          Block tpm = b.children[3];
-          b.children[3] = b.children[0];
-          b.children[0] = tpm;
-          tpm = b.children[1];
-          b.children[1] = b.children[2];
-          b.children[2] = tpm;
-        }
-      } else { // y-axis
-        // reflect itself
-        b.xCoord = this.xCoord + this.size - (b.xCoord - this.xCoord) - b.size;
-
-        // swap children to keep the right grid order
-        if (b.children.length > 0) {
-          Block tpm = b.children[1];
-          b.children[1] = b.children[0];
-          b.children[0] = tpm;
-          tpm = b.children[2];
-          b.children[2] = b.children[3];
-          b.children[3] = tpm;
-        }
-      }
+    for (Block child : this.children) {
+      child.reflect(direction);
     }
   }
 
@@ -253,42 +240,24 @@ public class Block {
       return;
     }
 
-    int midX = this.xCoord + this.size / 2;
-    int midY = this.yCoord + this.size / 2;
+    if (direction == 1) {
+      Block tpm = this.children[0];
+      this.children[0] = this.children[1];
+      this.children[1] = this.children[2];
+      this.children[2] = this.children[3];
+      this.children[3] = tpm;
+    } else {
+      Block tpm = this.children[0];
+      this.children[0] = this.children[3];
+      this.children[3] = this.children[2];
+      this.children[2] = this.children[1];
+      this.children[1] = tpm;
+    }
 
-    ArrayList<Block> blocks = new ArrayList<Block>();
-    blocks.add(this);
+    this.updateSizeAndPosition(this.size, this.xCoord, this.yCoord);
 
-    while (!blocks.isEmpty()) {
-      Block b = blocks.removeLast();
-      for (Block child : b.children) {
-        blocks.add(child);
-      }
-
-      int x = b.xCoord - midX;
-      int y = b.yCoord - midY;
-
-      int newX = direction == 1 ? -y - b.size : y;
-      int newY = direction == 1 ? x : -x - b.size;
-
-      b.xCoord = newX + midX;
-      b.yCoord = newY + midY;
-
-      if (b.children.length > 0) {
-        if (direction == 1) {
-          Block tpm = b.children[0];
-          b.children[0] = b.children[1];
-          b.children[1] = b.children[2];
-          b.children[2] = b.children[3];
-          b.children[3] = tpm;
-        } else {
-          Block tpm = b.children[0];
-          b.children[0] = b.children[3];
-          b.children[3] = b.children[2];
-          b.children[2] = b.children[1];
-          b.children[1] = tpm;
-        }
-      }
+    for (Block child : this.children) {
+      child.rotate(direction);
     }
   }
 
@@ -310,7 +279,7 @@ public class Block {
     /*
      * ADD YOUR CODE HERE
      */
-    if (this.level == 0 || this.level == this.maxDepth) {
+    if (this.level == 0 || this.level >= this.maxDepth) {
       return false;
     }
 
@@ -343,9 +312,6 @@ public class Block {
     int size = (int)Math.pow(2, this.maxDepth);
     int scale = this.size / size;
     Color[][] map = new Color[size][size];
-
-    ArrayList<Block> blocks = new ArrayList<Block>();
-    blocks.add(this);
 
     for (int i = 0; i < size; i++) {
       for (int k = 0; k < size; k++) {
@@ -439,92 +405,5 @@ public class Block {
       }
       System.out.println();
     }
-  }
-
-  @Override // TODO: remove this
-  public boolean equals(Object obj) {
-    if (!(obj instanceof Block)) {
-      return false;
-    }
-
-    Block b = (Block)obj;
-
-    if (b.children.length != this.children.length) {
-      return false;
-    }
-
-    boolean isChildrenEqual = true;
-    // for (int i = 0; i < b.children.length; i++) {
-    //   if (!(b.children[i].equals(this.children[i]))) {
-    //     isChildrenEqual = false;
-    //     break;
-    //   }
-    // }
-
-    return b.yCoord == this.yCoord && b.xCoord == this.xCoord &&
-        b.size == this.size && b.level == this.level &&
-        b.maxDepth == this.maxDepth && isChildrenEqual;
-  }
-
-  public static Block getMap(int size) { // TODO: remove this
-    Block root = new Block(
-        0, 0, size * 16 / 16, 0, 3, null,
-        new Block[] {
-            new Block(size * 8 / 16, 0, size * 8 / 16, 1, 3, GameColors.YELLOW,
-                      new Block[0]),
-            new Block(
-                0, 0, size * 8 / 16, 1, 3, null,
-                new Block[] {
-                    new Block(size * 4 / 16, 0, size * 4 / 16, 2, 3,
-                              GameColors.YELLOW, new Block[0]),
-                    new Block(0, 0, size * 4 / 16, 2, 3, GameColors.BLUE,
-                              new Block[0]),
-                    new Block(0, size * 4 / 16, size * 4 / 16, 2, 3, null,
-                              new Block[] {
-                                  new Block(size * 2 / 16, size * 4 / 16,
-                                            size * 2 / 16, 3, 3,
-                                            GameColors.YELLOW, new Block[0]),
-                                  new Block(0, size * 4 / 16, size * 2 / 16, 3,
-                                            3, GameColors.BLUE, new Block[0]),
-                                  new Block(0, size * 6 / 16, size * 2 / 16, 3,
-                                            3, GameColors.RED, new Block[0]),
-                                  new Block(size * 2 / 16, size * 6 / 16,
-                                            size * 2 / 16, 3, 3,
-                                            GameColors.GREEN, new Block[0]),
-                              }),
-                    new Block(size * 4 / 16, size * 4 / 16, size * 4 / 16, 2, 3,
-                              GameColors.GREEN, new Block[0]),
-                }),
-            new Block(0, size * 8 / 16, size * 8 / 16, 1, 3, GameColors.RED,
-                      new Block[0]),
-            new Block(
-                size * 8 / 16, size * 8 / 16, size * 8 / 16, 1, 3, null,
-                new Block[] {
-                    new Block(size * 12 / 16, size * 8 / 16, size * 4 / 16, 2,
-                              3, null,
-                              new Block[] {
-                                  new Block(size * 14 / 16, size * 8 / 16,
-                                            size * 2 / 16, 3, 3,
-                                            GameColors.YELLOW, new Block[0]),
-                                  new Block(size * 12 / 16, size * 8 / 16,
-                                            size * 2 / 16, 3, 3,
-                                            GameColors.BLUE, new Block[0]),
-                                  new Block(size * 12 / 16, size * 10 / 16,
-                                            size * 2 / 16, 3, 3, GameColors.RED,
-                                            new Block[0]),
-                                  new Block(size * 14 / 16, size * 10 / 16,
-                                            size * 2 / 16, 3, 3,
-                                            GameColors.GREEN, new Block[0]),
-                              }),
-                    new Block(size * 8 / 16, size * 8 / 16, size * 4 / 16, 2, 3,
-                              GameColors.BLUE, new Block[0]),
-                    new Block(size * 8 / 16, size * 12 / 16, size * 4 / 16, 2,
-                              3, GameColors.RED, new Block[0]),
-                    new Block(size * 12 / 16, size * 12 / 16, size * 4 / 16, 2,
-                              3, GameColors.GREEN, new Block[0]),
-                }),
-        });
-
-    return root;
   }
 }

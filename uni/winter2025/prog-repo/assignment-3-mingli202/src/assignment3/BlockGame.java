@@ -169,9 +169,8 @@ public class BlockGame extends JPanel implements Runnable, MouseListener,
 
     frame.add(side, BorderLayout.EAST);
 
-    int maxDepth = 3;
-    // int maxDepth = Integer.parseInt(JOptionPane.showInputDialog(
-    //     "Choose the maximum number of subdivisions allowed", 6));
+    int maxDepth = Integer.parseInt(JOptionPane.showInputDialog(
+        "Choose the maximum number of subdivisions allowed", 6));
 
     // init and run game
     int size = initGame(maxDepth);
@@ -188,11 +187,11 @@ public class BlockGame extends JPanel implements Runnable, MouseListener,
     String[] goalSelect = new String[] {"Blob", "Perimeter"};
 
     playerCount = 1;
-    // playerCount =
-    //     1 + JOptionPane.showOptionDialog(
-    //             null, "How many players?", "Playercount",
-    //             JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE,
-    //             null, options, options[0]);
+    playerCount =
+        1 + JOptionPane.showOptionDialog(
+                null, "How many players?", "Playercount",
+                JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE,
+                null, options, options[0]);
 
     double p1GoalType = gen.nextDouble();
     int p1TargetColor = gen.nextInt(GameColors.BLOCK_COLORS.length);
@@ -204,10 +203,10 @@ public class BlockGame extends JPanel implements Runnable, MouseListener,
     }
 
     if (playerCount == 1) {
-      // JOptionPane.showOptionDialog(
-      //     null, this.p1goal.description(), "Player 1 - Goal",
-      //     JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE, null,
-      //     new String[] {"OK"}, "OK");
+      JOptionPane.showOptionDialog(
+          null, this.p1goal.description(), "Player 1 - Goal",
+          JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE, null,
+          new String[] {"OK"}, "OK");
       p1ScoreLabel.setForeground(GameColors.BLOCK_COLORS[p1TargetColor]);
       p2ScoreLabel.setVisible(false);
     } else {
@@ -235,9 +234,8 @@ public class BlockGame extends JPanel implements Runnable, MouseListener,
       p2ScoreLabel.setForeground(GameColors.BLOCK_COLORS[p2TargetColor]);
     }
 
-    maxTurns = 100;
-    // maxTurns = Integer.parseInt(JOptionPane.showInputDialog(
-    //     "How many turns do you want to play? (per player)", 5));
+    maxTurns = Integer.parseInt(JOptionPane.showInputDialog(
+        "How many turns do you want to play? (per player)", 5));
     turnCountLabel.setText("Turns left: " + maxTurns);
 
     // init scores
@@ -289,8 +287,8 @@ public class BlockGame extends JPanel implements Runnable, MouseListener,
   }
 
   private int initGame(int maxDepth) {
-    maxDepth = 4;
-    Block.gen.setSeed(123);
+    // maxDepth = 4;
+    // Block.gen.setSeed(123);
     this.board = new Block(0, maxDepth);
     int minSize = this.dim / (int)Math.pow(2, maxDepth);
     int size = (int)Math.pow(2, maxDepth) * minSize;
