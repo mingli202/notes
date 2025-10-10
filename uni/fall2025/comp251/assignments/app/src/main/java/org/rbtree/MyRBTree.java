@@ -2,12 +2,9 @@ package org.rbtree;
 
 import com.google.common.base.Strings;
 import java.util.ArrayDeque;
-import java.util.ArrayList;
 import java.util.Deque;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Queue;
 
 public class MyRBTree extends RBTree {
   public static final String ANSI_RESET = "\u001B[0m";
@@ -19,6 +16,7 @@ public class MyRBTree extends RBTree {
     super();
     this.nil = new Node(0, null, Color.BLACK);
     this.root = this.nil;
+    this.root.parent = this.nil;
   }
 
   public void insert(int val) {
@@ -43,21 +41,21 @@ public class MyRBTree extends RBTree {
         node = node.parent.parent;
       } else {
         // case 2 + 3
-        if (node.parent.right == node) {
-          if (node.parent.parent.left == node.parent) {
+        if (node.parent.parent.left == node.parent) {
+          if (node.parent.right == node) {
             node = this._leftRotate(node.parent);
+            System.out.println(this);
           }
-
-          System.out.println(this);
 
           node.parent.color = Color.BLACK;
           node.parent.parent.color = Color.RED;
           this._rightRotate(node.parent.parent);
         } else {
-          if (node.parent.parent.right == node.parent) {
+          if (node.parent.left == node) {
             node = this._rightRotate(node.parent);
+            System.out.println(this);
           }
-          System.out.println(this);
+
           node.parent.color = Color.BLACK;
           node.parent.parent.color = Color.RED;
           this._leftRotate(node.parent.parent);
@@ -185,6 +183,7 @@ public class MyRBTree extends RBTree {
       this._blackHeight(this.root, 0, blackheights);
       return true;
     } catch (Exception e) {
+      System.out.println(e.getMessage());
       return false;
     }
   }
@@ -200,29 +199,34 @@ public class MyRBTree extends RBTree {
       throw new Exception("Cannot be red like the parent");
     }
 
-    if (node.left.val > node.val || node.right.val < node.val) {
+    if ((node.left != this.nil && node.left.val > node.val) ||
+        (node.right != this.nil && node.right.val < node.val)) {
       throw new Exception("Invalid binary search tree");
     }
-    if (node.left.parent != node || node.right.parent != node) {
-
+    if ((node.left != this.nil && node.left.parent != node) ||
+        (node.right != this.nil && node.right.parent != node)) {
       throw new Exception("Parent links are wrong");
     }
 
     // check black heights
-    int blackHeight = this._blackHeight(node.left, depth + 1, blackheights) +
-                      this._blackHeight(node.right, depth + 1, blackheights);
+    int leftBh = this._blackHeight(node.left, depth + 1, blackheights);
+    int rightBh = this._blackHeight(node.right, depth + 1, blackheights);
+
+    if (leftBh != rightBh) {
+      throw new Exception("Not equal black height");
+    }
 
     if (!blackheights.containsKey(depth)) {
-      blackheights.put(depth, blackHeight);
+      blackheights.put(depth, leftBh);
     } else {
       int otherBlackHeight = blackheights.get(depth);
 
-      if (otherBlackHeight != blackHeight) {
+      if (otherBlackHeight != leftBh) {
         throw new Exception("Not equal black height");
       }
     }
 
-    return blackHeight + (node.color == Color.BLACK ? 1 : 0);
+    return leftBh + (node.color == Color.BLACK ? 1 : 0);
   }
 
   private class NodeString {
