@@ -1,0 +1,149 @@
+class CheeseManager
+{
+  1 <@>- 1..* User;
+}
+
+class User
+{
+  String email;
+  String passwordHash;
+  String salt;
+}
+
+class Farmer
+{
+  isA User;
+  1 -- * Cheese;
+  
+  String postalCode;
+  name;
+}
+
+class FacilityManager
+{
+  isA User;
+}
+
+class Facility
+{
+  * -- 1 FacilityManager;
+}
+
+class Shelf {
+  * -<@> 1 Facility;
+  
+  unique String id;
+}
+
+class Cheese
+{
+  1 <@>- 1 ShelfLocation;
+  
+  String purchaseDate;
+  int age;
+  int monthsToAge;
+}
+
+class ShelfLocation
+{
+  * -<@> 1 Shelf;
+  
+  int row;
+  int column;
+}
+
+class Order
+{
+  * -- 1 FacilityManager;
+  1 -- * Cheese;
+
+  int kind;
+  int numberOfMissingCheese;
+  Date purchaseDate;
+  Date deliveryDate;
+  String companyAddress;
+  String companyName;
+}
+
+class Robot
+{
+  1 -<@> 1 Facility;
+  1 -- 1 ShelfLocation;
+}
+
+class RobotActionLog
+{
+  * -<@> 1 Robot;
+
+  String severity;
+  String title;
+  String details;
+}
+
+//$?[End_of_model]$?
+
+namespace -;
+
+class CheeseManager
+{
+  position 319 32 129.583 43.3667;
+  position.association CheeseManager__User 62,43 0,10;
+}
+
+class User
+{
+  position 222 119 171.9 97.3667;
+}
+
+class Farmer
+{
+  position 540 248 149.233 79.3667;
+  position.association Cheese__Farmer 82,79 60,0;
+}
+
+class FacilityManager
+{
+  position 77 225 127.067 43.3667;
+}
+
+class Facility
+{
+  position 55 469 109 43.3667;
+  position.association Facility__FacilityManager 30,0 44,43;
+}
+
+class Shelf
+{
+  position 151 548 109 61.3667;
+  position.association Facility__Shelf 0,33 51,43;
+}
+
+class Cheese
+{
+  position 505 465 167.467 97.3667;
+  position.association Cheese__ShelfLocation 0,45 128,32;
+}
+
+class ShelfLocation
+{
+  position 313 515 109 79.3667;
+  position.association ShelfLocation__Shelf 0,26 109,32;
+}
+
+class Order
+{
+  position 252 307 216.9 133.367;
+  position.association Cheese__Order 217,67 0,45;
+  position.association FacilityManager__Order 0,10 89,43;
+}
+
+class Robot
+{
+  position 103 669 109 43.3667;
+  position.association Facility__Robot 0,10 37,43;
+}
+
+class RobotActionLog
+{
+  position 355 672 127.45 43.3667;
+}
