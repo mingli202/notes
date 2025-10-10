@@ -1,10 +1,13 @@
 package org.rbtree;
 
 import com.google.common.base.Strings;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 
 public class MyRBTree extends RBTree {
   public static final String ANSI_RESET = "\u001B[0m";
@@ -213,58 +216,59 @@ public class MyRBTree extends RBTree {
         this.treeToStringArray(this.root).stream().map(s -> s.string).toList());
   }
 
-  private List<NodeString> treeToStringArray(Node root) {
-    var list = new ArrayList<NodeString>();
+  private Deque<NodeString> treeToStringArray(Node root) {
+    var q = new ArrayDeque<NodeString>();
 
     if (root == this.nil) {
-      list.add(new NodeString(root));
-      return list;
+      q.addFirst(new NodeString(root));
+      return q;
     }
 
     var leftTree = treeToStringArray(root.left);
     var rightTree = treeToStringArray(root.right);
 
-    int i = 0;
-    for (; i < Math.min(leftTree.size(), rightTree.size()); i++) {
-      var l = leftTree.get(i);
-      var r = rightTree.get(i);
+    int leftLength = leftTree.element().length;
+    int rightLength = rightTree.element().length;
+
+    while (!leftTree.isEmpty() && !rightTree.isEmpty()) {
+      var l = leftTree.pollFirst();
+      var r = rightTree.pollFirst();
 
       String newString =
           Strings.padEnd(l.string, l.string.length() + 2, ' ') + r.string;
-      list.add(new NodeString(newString, l.length + 2 + r.length));
+      q.addFirst(new NodeString(newString, l.length + 2 + r.length));
     }
 
-    int len = list.getLast().length;
+    int len = q.getLast().length;
 
-    while (i < leftTree.size()) {
-      var n = leftTree.get(i);
-      list.addFirst(new NodeString(
+    while (!leftTree.isEmpty()) {
+      var n = leftTree.pollFirst();
+      q.addFirst(new NodeString(
           Strings.padEnd(n.string, len - n.length + n.string.length(), ' '),
           len));
-      i++;
-    }
-    while (i < rightTree.size()) {
-      var n = rightTree.get(i);
-      list.addFirst(new NodeString(
-          Strings.padStart(n.string, len - n.length + n.string.length(), ' '),
-          len));
-      i++;
     }
 
-    String leftArrowString = this._center("/", leftTree.getFirst().length);
-    String rightArrowString = this._center("\\", rightTree.getFirst().length);
+    while (!rightTree.isEmpty()) {
+      var n = rightTree.pollFirst();
+      q.addFirst(new NodeString(
+          Strings.padStart(n.string, len - n.length + n.string.length(), ' '),
+          len));
+    }
+
+    String leftArrowString = this._center("/", leftLength);
+    String rightArrowString = this._center("\\", rightLength);
 
     String arrowStrings =
         Strings.padEnd(leftArrowString, leftArrowString.length() + 2, ' ') +
         rightArrowString;
 
-    list.add(new NodeString(arrowStrings, arrowStrings.length()));
+    q.add(new NodeString(arrowStrings, arrowStrings.length()));
 
     NodeString rootString = new NodeString(root);
     rootString = new NodeString(this._center(rootString, len), len);
-    list.add(rootString);
+    q.add(rootString);
 
-    return list.reversed();
+    return q.reversed();
   }
 
   private String _center(String str, int length) {
