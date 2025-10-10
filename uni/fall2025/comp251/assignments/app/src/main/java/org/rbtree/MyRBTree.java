@@ -1,10 +1,14 @@
 package org.rbtree;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class MyRBTree extends RBTree {
   MyRBTree() {
     super();
     this.root = this.nil;
     this.nil.color = Color.BLACK;
+    this.nil.parent = this.nil;
   }
 
   public void insert(int val) {
@@ -126,7 +130,48 @@ public class MyRBTree extends RBTree {
   }
 
   public boolean isValidRBT() {
-    // TODO: Your implementation here
-    return false;
+    if (this.root.color != Color.BLACK) {
+      return false;
+    }
+
+    Map<Integer, Integer> blackheights = new HashMap<Integer, Integer>();
+
+    try {
+      this._blackHeight(this.root, 0, blackheights);
+      return true;
+    } catch (Error e) {
+      return false;
+    }
+  }
+
+  private int _blackHeight(Node node, int depth,
+                           Map<Integer, Integer> blackheights) {
+    if (node == this.nil) {
+      return 1;
+    }
+
+    if (node.color == Color.RED && node.parent.color == Color.RED) {
+      throw new Error("Cannot be red like the parent");
+    }
+
+    if (node.left.val > node.val || node.right.val < node.val) {
+      throw new Error("Invalid binary search tree");
+    }
+
+    // check black heights
+    int blackHeight = this._blackHeight(node.left, depth + 1, blackheights) +
+                      this._blackHeight(node.right, depth + 1, blackheights);
+
+    if (!blackheights.containsKey(depth)) {
+      blackheights.put(depth, blackHeight);
+    } else {
+      int otherBlackHeight = blackheights.get(depth);
+
+      if (otherBlackHeight != blackHeight) {
+        throw new Error("Not equal black height");
+      }
+    }
+
+    return blackHeight + (node.color == Color.BLACK ? 1 : 0);
   }
 }
