@@ -173,14 +173,14 @@ public class MyRBTree extends RBTree {
   }
 
   public boolean isValidRBT() {
-    if (this.root.color != Color.BLACK) {
+    if (this.root.color != Color.BLACK || this.nil.color != Color.BLACK) {
       return false;
     }
 
-    Map<Integer, Integer> blackheights = new HashMap<Integer, Integer>();
+    BH bh = new BH(-1);
 
     try {
-      this._blackHeight(this.root, 0, blackheights);
+      this._blackHeight(this.root, 0, bh);
       return true;
     } catch (Exception e) {
       System.out.println(e.getMessage());
@@ -188,11 +188,19 @@ public class MyRBTree extends RBTree {
     }
   }
 
-  private int _blackHeight(Node node, int depth,
-                           Map<Integer, Integer> blackheights)
-      throws Exception {
+  class BH {
+    Integer bh;
+    public BH(Integer bh) { this.bh = bh; }
+  }
+
+  private void _blackHeight(Node node, int currentBh, BH bh) throws Exception {
     if (node == this.nil) {
-      return 1;
+      if (bh.bh == -1) {
+        bh.bh = currentBh;
+      } else if (bh.bh != currentBh) {
+        throw new Exception("Black height not equal");
+      }
+      return;
     }
 
     if (node.color == Color.RED && node.parent.color == Color.RED) {
@@ -208,27 +216,67 @@ public class MyRBTree extends RBTree {
       throw new Exception("Parent links are wrong");
     }
 
-    // check black heights
-    int leftBh = this._blackHeight(node.left, depth + 1, blackheights);
-    int rightBh = this._blackHeight(node.right, depth + 1, blackheights);
-
-    if (leftBh != rightBh) {
-      throw new Exception("Not equal black height");
-    }
-
-    if (!blackheights.containsKey(depth)) {
-      blackheights.put(depth, leftBh);
-    } else {
-      int otherBlackHeight = blackheights.get(depth);
-
-      if (otherBlackHeight != leftBh) {
-        throw new Exception("Not equal black height");
-      }
-    }
-
-    return leftBh + (node.color == Color.BLACK ? 1 : 0);
+    this._blackHeight(node.left,
+                      currentBh + (node.color == Color.BLACK ? 1 : 0), bh);
+    this._blackHeight(node.right,
+                      currentBh + (node.color == Color.BLACK ? 1 : 0), bh);
   }
 
+  // private class BlackHeight {
+  //   int bh;
+  //   int maxLeft;
+  //   int minRight;
+  //
+  //   public BlackHeight(int bh, int maxLeft, int minRight) {
+  //     this.bh = bh;
+  //     this.maxLeft = maxLeft;
+  //     this.minRight = minRight;
+  //   }
+  // }
+  // private BlackHeight _blackHeight(Node node, int depth,
+  //                                  Map<Integer, Integer> blackheights)
+  //     throws Exception {
+  //   if (node == this.nil) {
+  //     return new BlackHeight(1, 0, 0);
+  //   }
+  //
+  //   if (node.color == Color.RED && node.parent.color == Color.RED) {
+  //     throw new Exception("Cannot be red like the parent");
+  //   }
+  //
+  //   if ((node.left != this.nil && node.left.parent != node) ||
+  //       (node.right != this.nil && node.right.parent != node)) {
+  //     throw new Exception("Parent links are wrong");
+  //   }
+  //
+  //   // check black heights
+  //   var leftBh = this._blackHeight(node.left, depth + 1, blackheights);
+  //   var rightBh = this._blackHeight(node.right, depth + 1, blackheights);
+  //
+  //   if ((node.left != this.nil && leftBh.maxLeft > node.val) ||
+  //       (node.right != this.nil && rightBh.minRight < node.val)) {
+  //     throw new Exception("Invalid binary search tree");
+  //   }
+  //
+  //   if (leftBh.bh != rightBh.bh) {
+  //     throw new Exception("Not equal black height");
+  //   }
+  //
+  //   if (!blackheights.containsKey(depth)) {
+  //     blackheights.put(depth, leftBh.bh);
+  //   } else {
+  //     int otherBlackHeight = blackheights.get(depth);
+  //
+  //     if (otherBlackHeight != leftBh.bh) {
+  //       throw new Exception("Not equal black height");
+  //     }
+  //   }
+  //
+  //   return new BlackHeight(leftBh.bh + (node.color == Color.BLACK ? 1 : 0),
+  //                          Math.max(leftBh.maxLeft, rightBh.maxLeft),
+  //                          Math.min(leftBh.minRight, rightBh.minRight));
+  // }
+  //
   private class NodeString {
     String string;
     int length;
