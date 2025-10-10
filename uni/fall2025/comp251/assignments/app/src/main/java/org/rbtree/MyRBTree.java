@@ -30,12 +30,17 @@ public class MyRBTree extends RBTree {
     Node node = this._addNode(val);
 
     while (node.parent.color == Color.RED) {
+      System.out.println(this);
+
       Node uncle = this._getUncle(node);
 
       // case 1
       if (uncle.color == Color.RED) {
         node.parent.color = Color.BLACK;
         uncle.color = Color.BLACK;
+        if (node.parent.parent != this.root) {
+          node.parent.parent.color = Color.RED;
+        }
         node = node.parent.parent;
       } else {
         // case 2 + 3
@@ -71,12 +76,13 @@ public class MyRBTree extends RBTree {
   private Node _addNode(int val) {
     Node node = this.root;
 
-    var newNode = this._newNode(val, node.left, Color.RED);
+    var newNode = this._newNode(val, null, Color.RED);
 
     while (true) {
       if (val < node.val) {
         if (node.left == this.nil) {
           node.left = newNode;
+          newNode.parent = node;
           break;
         } else {
           node = node.left;
@@ -84,6 +90,7 @@ public class MyRBTree extends RBTree {
       } else {
         if (node.right == this.nil) {
           node.right = newNode;
+          newNode.parent = node;
           break;
         } else {
           node = node.right;

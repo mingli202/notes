@@ -14,6 +14,11 @@ public abstract class RBTree {
       this.parent = parent;
       this.color = color;
     }
+
+    @Override
+    public String toString() {
+      return this.color + "(" + String.valueOf(this.val) + ")";
+    }
   }
 
   public abstract void insert(int val);
