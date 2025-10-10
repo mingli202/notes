@@ -22,7 +22,14 @@ import org.junit.jupiter.api.Test;
 public class MyRBTreeTest {
 
   // Adjust this type if your implementation uses a different class name.
-  private MyRBTree newTree() { return new MyRBTree(); }
+  private MyRBTree newTree() {
+    return new MyRBTree() {
+      @Override
+      public String toString() {
+        return "";
+      }
+    };
+  }
 
   private String[] toArrayString(MyRBTree tree) throws Exception {
     var list = new ArrayList<String>();
@@ -59,9 +66,8 @@ public class MyRBTreeTest {
   void singleInsertIsValid() {
     MyRBTree tree = newTree();
     tree.insert(10);
-    assertTrue(
-        tree.isValidRBT(),
-        "A tree with a single node must satisfy RBT properties (root black).");
+    assertTrue(tree.isValidRBT(), "A tree with a single node must satisfy "
+                                      + "RBT properties (root black).");
   }
 
   @Test
@@ -165,7 +171,8 @@ public class MyRBTreeTest {
    * - then it looks for a color-like field in the node (boolean, enum).
    * - if no suitable field is found, the test is skipped (assumption).
    *
-   * This avoids false failures on implementations that name things differently.
+   * This avoids false failures on implementations that name things
+   * differently.
    */
   @Test
   void isValidDetectsBrokenRootColor() throws Exception {
