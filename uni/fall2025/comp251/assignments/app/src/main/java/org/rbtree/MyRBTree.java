@@ -3,9 +3,15 @@ package org.rbtree;
 import com.google.common.base.Strings;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class MyRBTree extends RBTree {
+  public static final String ANSI_RESET = "\u001B[0m";
+  public static final String ANSI_RED = "\u001B[31m";
+  public static final String ANSI_GREEN = "\u001B[32m";
+  public static final String ANSI_WHITE = "\u001B[37m";
+
   public MyRBTree() {
     super();
     this.nil = new Node(0, null, Color.BLACK);
@@ -63,6 +69,7 @@ public class MyRBTree extends RBTree {
     Node node = this.root;
 
     var newNode = this._newNode(val, node.left, Color.RED);
+
     while (true) {
       if (val < node.val) {
         if (node.left == this.nil) {
@@ -80,9 +87,6 @@ public class MyRBTree extends RBTree {
         }
       }
     }
-
-    newNode.left = this.nil;
-    newNode.right = this.nil;
 
     return newNode;
   }
@@ -185,44 +189,82 @@ public class MyRBTree extends RBTree {
     return blackHeight + (node.color == Color.BLACK ? 1 : 0);
   }
 
-  @Override
-  public String toString() {
-    return String.join("\n", this.treeToStringArray(this.root).reversed());
+  private class NodeString {
+    String string;
+    int length;
+
+    public NodeString(Node node) {
+      String s = node == nil ? "nil" : String.valueOf(node.val);
+      this.string =
+          (node.color == Color.BLACK ? ANSI_GREEN : ANSI_RED) + s + ANSI_RESET;
+      this.length = s.length();
+    }
+
+    public NodeString(String str, int length) {
+      this.string = str;
+      this.length = length;
+    }
   }
 
-  private ArrayList<String> treeToStringArray(Node root) {
-    var list = new ArrayList<String>();
+  @Override
+  public String toString() {
+    return String.join(
+        "\n",
+        this.treeToStringArray(this.root).stream().map(s -> s.string).toList());
+  }
+
+  private List<NodeString> treeToStringArray(Node root) {
+    var list = new ArrayList<NodeString>();
 
     if (root == this.nil) {
-      list.add("nil");
+      list.add(new NodeString(root));
       return list;
     }
 
     var leftTree = treeToStringArray(root.left);
     var rightTree = treeToStringArray(root.right);
 
-    for (int i = 0; i < Math.min(leftTree.size(), rightTree.size()); i++) {
-      String l = leftTree.get(i);
-      String r = rightTree.get(i);
+    int i = 0;
+    for (; i < Math.min(leftTree.size(), rightTree.size()); i++) {
+      var l = leftTree.get(i);
+      var r = rightTree.get(i);
 
-      list.add(Strings.padEnd(l, l.length() + 2, ' ') + r);
+      String newString =
+          Strings.padEnd(l.string, l.string.length() + 2, ' ') + r.string;
+      list.add(new NodeString(newString, l.length + 2 + r.length));
     }
 
-    int len = list.get(0).length();
+    int len = list.getLast().length;
 
-    String leftArrowString = this._center("/", leftTree.get(0).length());
-    String rightArrowString = this._center("\\", rightTree.get(0).length());
+    while (i < leftTree.size()) {
+      var n = leftTree.get(i);
+      list.addFirst(new NodeString(
+          Strings.padEnd(n.string, len - n.length + n.string.length(), ' '),
+          len));
+      i++;
+    }
+    while (i < rightTree.size()) {
+      var n = rightTree.get(i);
+      list.addFirst(new NodeString(
+          Strings.padStart(n.string, len - n.length + n.string.length(), ' '),
+          len));
+      i++;
+    }
+
+    String leftArrowString = this._center("/", leftTree.getFirst().length);
+    String rightArrowString = this._center("\\", rightTree.getFirst().length);
+
     String arrowStrings =
         Strings.padEnd(leftArrowString, leftArrowString.length() + 2, ' ') +
         rightArrowString;
 
-    list.add(arrowStrings);
+    list.add(new NodeString(arrowStrings, arrowStrings.length()));
 
-    String rootString = this._center(String.valueOf(root.val), len);
-
+    NodeString rootString = new NodeString(root);
+    rootString = new NodeString(this._center(rootString, len), len);
     list.add(rootString);
 
-    return list;
+    return list.reversed();
   }
 
   private String _center(String str, int length) {
@@ -231,5 +273,14 @@ public class MyRBTree extends RBTree {
     str = Strings.padEnd(str, length, ' ');
 
     return str;
+  }
+
+  private String _center(NodeString str, int length) {
+    int nStart = (length - str.length) / 2;
+
+    String s = Strings.padStart(str.string, nStart + str.string.length(), ' ');
+    s = Strings.padEnd(s, length - nStart - str.length + s.length(), ' ');
+
+    return s;
   }
 }
