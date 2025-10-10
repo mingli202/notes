@@ -29,9 +29,8 @@ public class MyRBTree extends RBTree {
 
     Node node = this._addNode(val);
 
+    System.out.println(this);
     while (node.parent.color == Color.RED) {
-      System.out.println(this);
-
       Node uncle = this._getUncle(node);
 
       // case 1
@@ -46,22 +45,26 @@ public class MyRBTree extends RBTree {
         // case 2 + 3
         if (node.parent.right == node) {
           if (node.parent.parent.left == node.parent) {
-            node = this._rightRotate(node.parent);
-          } else {
-            node.parent.color = Color.BLACK;
-            node.parent.parent.color = Color.RED;
-            this._leftRotate(node.parent.parent);
+            node = this._leftRotate(node.parent);
           }
+
+          System.out.println(this);
+
+          node.parent.color = Color.BLACK;
+          node.parent.parent.color = Color.RED;
+          this._rightRotate(node.parent.parent);
         } else {
           if (node.parent.parent.right == node.parent) {
-            node = this._leftRotate(node.parent);
-          } else {
-            node.parent.color = Color.BLACK;
-            node.parent.parent.color = Color.RED;
-            this._rightRotate(node.parent.parent);
+            node = this._rightRotate(node.parent);
           }
+          System.out.println(this);
+          node.parent.color = Color.BLACK;
+          node.parent.parent.color = Color.RED;
+          this._leftRotate(node.parent.parent);
         }
       }
+
+      System.out.println(this);
     }
   }
 
@@ -125,12 +128,21 @@ public class MyRBTree extends RBTree {
     Node newRoot = node.left;
 
     node.left = newRoot.right;
-    newRoot.right = node;
+    newRoot.right.parent = node;
 
-    if (parent.left == node) {
-      parent.left = newRoot;
+    newRoot.right = node;
+    node.parent = newRoot;
+
+    if (parent == this.nil) {
+      this.root = newRoot;
+      newRoot.parent = this.nil;
     } else {
-      parent.right = newRoot;
+      if (parent.left == node) {
+        parent.left = newRoot;
+      } else {
+        parent.right = newRoot;
+      }
+      newRoot.parent = parent;
     }
 
     return node;
@@ -141,12 +153,22 @@ public class MyRBTree extends RBTree {
     Node newRoot = node.right;
 
     node.right = newRoot.left;
-    newRoot.left = node;
+    newRoot.left.parent = node;
 
-    if (parent.left == node) {
-      parent.left = newRoot;
+    newRoot.left = node;
+    node.parent = newRoot;
+
+    if (parent == this.nil) {
+      this.root = newRoot;
+      newRoot.parent = this.nil;
     } else {
-      parent.right = newRoot;
+
+      if (parent.left == node) {
+        parent.left = newRoot;
+      } else {
+        parent.right = newRoot;
+      }
+      newRoot.parent = parent;
     }
 
     return node;
@@ -180,6 +202,10 @@ public class MyRBTree extends RBTree {
 
     if (node.left.val > node.val || node.right.val < node.val) {
       throw new Exception("Invalid binary search tree");
+    }
+    if (node.left.parent != node || node.right.parent != node) {
+
+      throw new Exception("Parent links are wrong");
     }
 
     // check black heights
