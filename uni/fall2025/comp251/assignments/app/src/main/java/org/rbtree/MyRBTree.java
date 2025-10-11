@@ -1,10 +1,7 @@
 package org.rbtree;
 
-import com.google.common.base.Strings;
 import java.util.ArrayDeque;
 import java.util.Deque;
-import java.util.HashMap;
-import java.util.Map;
 
 public class MyRBTree extends RBTree {
   public static final String ANSI_RESET = "\u001B[0m";
@@ -222,61 +219,6 @@ public class MyRBTree extends RBTree {
                       currentBh + (node.color == Color.BLACK ? 1 : 0), bh);
   }
 
-  // private class BlackHeight {
-  //   int bh;
-  //   int maxLeft;
-  //   int minRight;
-  //
-  //   public BlackHeight(int bh, int maxLeft, int minRight) {
-  //     this.bh = bh;
-  //     this.maxLeft = maxLeft;
-  //     this.minRight = minRight;
-  //   }
-  // }
-  // private BlackHeight _blackHeight(Node node, int depth,
-  //                                  Map<Integer, Integer> blackheights)
-  //     throws Exception {
-  //   if (node == this.nil) {
-  //     return new BlackHeight(1, 0, 0);
-  //   }
-  //
-  //   if (node.color == Color.RED && node.parent.color == Color.RED) {
-  //     throw new Exception("Cannot be red like the parent");
-  //   }
-  //
-  //   if ((node.left != this.nil && node.left.parent != node) ||
-  //       (node.right != this.nil && node.right.parent != node)) {
-  //     throw new Exception("Parent links are wrong");
-  //   }
-  //
-  //   // check black heights
-  //   var leftBh = this._blackHeight(node.left, depth + 1, blackheights);
-  //   var rightBh = this._blackHeight(node.right, depth + 1, blackheights);
-  //
-  //   if ((node.left != this.nil && leftBh.maxLeft > node.val) ||
-  //       (node.right != this.nil && rightBh.minRight < node.val)) {
-  //     throw new Exception("Invalid binary search tree");
-  //   }
-  //
-  //   if (leftBh.bh != rightBh.bh) {
-  //     throw new Exception("Not equal black height");
-  //   }
-  //
-  //   if (!blackheights.containsKey(depth)) {
-  //     blackheights.put(depth, leftBh.bh);
-  //   } else {
-  //     int otherBlackHeight = blackheights.get(depth);
-  //
-  //     if (otherBlackHeight != leftBh.bh) {
-  //       throw new Exception("Not equal black height");
-  //     }
-  //   }
-  //
-  //   return new BlackHeight(leftBh.bh + (node.color == Color.BLACK ? 1 : 0),
-  //                          Math.max(leftBh.maxLeft, rightBh.maxLeft),
-  //                          Math.min(leftBh.minRight, rightBh.minRight));
-  // }
-  //
   private class NodeString {
     String string;
     int length;
@@ -320,7 +262,7 @@ public class MyRBTree extends RBTree {
       var r = rightTree.pollFirst();
 
       String newString =
-          Strings.padEnd(l.string, l.string.length() + 2, ' ') + r.string;
+          this.padEnd(l.string, l.string.length() + 2) + r.string;
       q.addFirst(new NodeString(newString, l.length + 2 + r.length));
     }
 
@@ -329,22 +271,20 @@ public class MyRBTree extends RBTree {
     while (!leftTree.isEmpty()) {
       var n = leftTree.pollFirst();
       q.addFirst(new NodeString(
-          Strings.padEnd(n.string, len - n.length + n.string.length(), ' '),
-          len));
+          this.padEnd(n.string, len - n.length + n.string.length()), len));
     }
 
     while (!rightTree.isEmpty()) {
       var n = rightTree.pollFirst();
       q.addFirst(new NodeString(
-          Strings.padStart(n.string, len - n.length + n.string.length(), ' '),
-          len));
+          this.padStart(n.string, len - n.length + n.string.length()), len));
     }
 
     String leftArrowString = this._center("/", leftLength);
     String rightArrowString = this._center("\\", rightLength);
 
     String arrowStrings =
-        Strings.padEnd(leftArrowString, leftArrowString.length() + 2, ' ') +
+        this.padEnd(leftArrowString, leftArrowString.length() + 2) +
         rightArrowString;
 
     q.add(new NodeString(arrowStrings, arrowStrings.length()));
@@ -357,9 +297,8 @@ public class MyRBTree extends RBTree {
   }
 
   private String _center(String str, int length) {
-    str =
-        Strings.padStart(str, (length - str.length()) / 2 + str.length(), ' ');
-    str = Strings.padEnd(str, length, ' ');
+    str = this.padStart(str, (length - str.length()) / 2 + str.length());
+    str = this.padEnd(str, length);
 
     return str;
   }
@@ -367,9 +306,17 @@ public class MyRBTree extends RBTree {
   private String _center(NodeString str, int length) {
     int nStart = (length - str.length) / 2;
 
-    String s = Strings.padStart(str.string, nStart + str.string.length(), ' ');
-    s = Strings.padEnd(s, length - nStart - str.length + s.length(), ' ');
+    String s = padStart(str.string, nStart + str.string.length());
+    s = padEnd(s, length - nStart - str.length + s.length());
 
     return s;
+  }
+
+  private String padStart(String s, int len) {
+    return String.format("%" + len + "s", s);
+  }
+
+  private String padEnd(String s, int len) {
+    return String.format("%-" + len + "s", s);
   }
 }
