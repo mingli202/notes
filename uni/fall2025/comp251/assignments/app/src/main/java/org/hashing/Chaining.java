@@ -5,6 +5,8 @@ import java.util.*;
 public class Chaining extends SimpleHashSet {
   public ArrayList<ArrayList<Integer>> Table;
 
+  private int size = 0;
+
   protected Chaining(int w, int seed, int A) {
     super(w, seed, A);
     this.Table = new ArrayList<>(m);
@@ -22,8 +24,18 @@ public class Chaining extends SimpleHashSet {
    * encountered*/
   @Override
   public int insert(int key) {
-    // TODO
-    throw new NotImplementedException("Chaining::insert");
+    var slot = this.Table.get(this.hash(key));
+
+    int index = slot.indexOf(key);
+    if (index != -1) {
+      return index;
+    }
+
+    int collision = slot.size();
+    slot.add(key);
+    this.size++;
+
+    return collision;
   }
 
   /**
@@ -32,21 +44,28 @@ public class Chaining extends SimpleHashSet {
    */
   @Override
   int remove(int key) {
-    // TODO
-    throw new NotImplementedException("Chaining::remove");
+    var slot = this.Table.get(this.hash(key));
+
+    int index = slot.indexOf(key);
+
+    if (index != -1) {
+      slot.remove(key);
+      this.size--;
+      return index;
+    }
+
+    return 0;
   }
 
   /** Returns whether the key is in the set */
   @Override
   boolean contains(int key) {
-    // TODO
-    throw new NotImplementedException("Chaining::contains");
+    return this.Table.get(this.hash(key)).contains(key);
   }
 
   /** Return how many keys are currently in the set */
   @Override
   long size() {
-    // TODO
-    throw new NotImplementedException("Chaining::size");
+    return this.size;
   }
 }
