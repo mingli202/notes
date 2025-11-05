@@ -17,7 +17,7 @@ public class Chaining extends SimpleHashSet {
 
   /**Implements the hash function h(k)*/
   public int hash(int key) {
-    return (this.A * (key % (power2(this.w))) >> (this.w - this.r));
+    return ((this.A * key) % (power2(this.w)) >> (this.w - this.r));
   }
 
   /**Inserts key k into hash table. Returns the number of collisions
@@ -28,7 +28,7 @@ public class Chaining extends SimpleHashSet {
 
     int index = slot.indexOf(key);
     if (index != -1) {
-      return index;
+      return index + 1;
     }
 
     int collision = slot.size();
@@ -49,12 +49,12 @@ public class Chaining extends SimpleHashSet {
     int index = slot.indexOf(key);
 
     if (index != -1) {
-      slot.remove(key);
+      slot.remove(index);
       this.size--;
       return index;
     }
 
-    return 0;
+    return slot.size();
   }
 
   /** Returns whether the key is in the set */

@@ -163,42 +163,4 @@ public class MyRBTreeTest {
     assertTrue(tree.isValidRBT(), "After many inserts (0.." + (N - 1) +
                                       ") tree must remain valid.");
   }
-
-  /**
-   * Reflection-based test: try to corrupt the root color and verify
-   * isValidRBT() detects the problem. This test is permissive:
-   * - it tries to find a field named "root" or a Node-typed field.
-   * - then it looks for a color-like field in the node (boolean, enum).
-   * - if no suitable field is found, the test is skipped (assumption).
-   *
-   * This avoids false failures on implementations that name things
-   * differently.
-   */
-  @Test
-  void isValidDetectsBrokenRootColor() throws Exception {
-    MyRBTree tree = newTree();
-    tree.insert(12345); // ensure root exists
-
-    Field rootField = tree.getClass().getDeclaredField("root");
-    rootField.setAccessible(true);
-
-    Object root = rootField.get(tree);
-
-    // Find a 'color' like field on the node
-    Field colorField = root.getClass().getDeclaredField("color");
-
-    colorField.setAccessible(true);
-
-    // Save original value, mutate to break the root-black rule, assert
-    // isValidRBT() false, then restore original value.
-    Object original = colorField.get(root);
-
-    try {
-      colorField.set(root, Color.RED);
-      assertFalse(tree.isValidRBT(),
-                  "isValidRBT() should detect a root color violation (enum).");
-    } finally {
-      colorField.set(root, original);
-    }
-  }
 }

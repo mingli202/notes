@@ -1,10 +1,8 @@
-
 package org.hashing;
-
-import java.util.Arrays;
 
 public class OpenAddressing extends SimpleHashSet {
   public int[] Table;
+  private int size = 0;
 
   protected OpenAddressing(int w, int seed, int A) {
     super(w, seed, A);
@@ -16,7 +14,7 @@ public class OpenAddressing extends SimpleHashSet {
 
   /**Implements the probe function p(k, i)*/
   public int probe(int key, int i) {
-    int hash = (this.A * (key % (power2(this.w))) >> (this.w - this.r));
+    int hash = (((this.A * key) % power2(this.w)) >> (this.w - this.r));
     return (hash + i) % this.m;
   }
 
@@ -25,9 +23,19 @@ public class OpenAddressing extends SimpleHashSet {
    */
   @Override
   public int insert(int key) {
+    boolean contains = this.contains(key);
+
     for (int i = 0; i < this.m; i++) {
-      if (this.Table[this.probe(key, i)] == -1) {
-        this.Table[this.probe(key, i)] = key;
+      int hash = this.probe(key, i);
+      int val = this.Table[hash];
+
+      if (val == key) {
+        return i + 1;
+      }
+
+      if (val < 0 && !contains) {
+        this.Table[hash] = key;
+        this.size++;
         return i;
       }
     }
@@ -41,8 +49,15 @@ public class OpenAddressing extends SimpleHashSet {
   @Override
   public int remove(int key) {
     for (int i = 0; i < this.m; i++) {
-      if (this.Table[this.probe(key, i)] == key) {
-        this.Table[this.probe(key, i)] = -1;
+      int val = this.Table[this.probe(key, i)];
+
+      if (val == -1) {
+        return i + 1;
+      }
+
+      if (val == key) {
+        this.Table[this.probe(key, i)] = -2;
+        this.size--;
         return i;
       }
     }
@@ -53,7 +68,8 @@ public class OpenAddressing extends SimpleHashSet {
   @Override
   public boolean contains(int key) {
     for (int i = 0; i < this.m; i++) {
-      if (this.Table[this.probe(key, i)] == key) {
+      int val = this.Table[this.probe(key, i)];
+      if (val == key) {
         return true;
       }
     }
@@ -63,12 +79,6 @@ public class OpenAddressing extends SimpleHashSet {
   /** Return how many keys are currently in the set */
   @Override
   long size() {
-    int n = 0;
-    for (int i = 0; i < this.m; i++) {
-      if (this.Table[i] != -1) {
-        n++;
-      }
-    }
-    return n;
+    return this.size;
   }
 }
