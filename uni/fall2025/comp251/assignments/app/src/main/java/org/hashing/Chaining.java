@@ -17,7 +17,7 @@ public class Chaining extends SimpleHashSet {
 
   /**Implements the hash function h(k)*/
   public int hash(int key) {
-    return (this.A * key % (power2(this.w)) >> (this.w - this.r));
+    return (this.A * (key % (power2(this.w))) >> (this.w - this.r));
   }
 
   /**Inserts key k into hash table. Returns the number of collisions

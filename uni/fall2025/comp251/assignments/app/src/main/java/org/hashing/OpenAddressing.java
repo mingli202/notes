@@ -16,8 +16,8 @@ public class OpenAddressing extends SimpleHashSet {
 
   /**Implements the probe function p(k, i)*/
   public int probe(int key, int i) {
-    // TODO
-    throw new NotImplementedException("OpenAddressing::probe");
+    int hash = (this.A * (key % (power2(this.w))) >> (this.w - this.r));
+    return (hash + i) % this.m;
   }
 
   /**
@@ -25,8 +25,13 @@ public class OpenAddressing extends SimpleHashSet {
    */
   @Override
   public int insert(int key) {
-    // TODO
-    throw new NotImplementedException("OpenAddressing::insert");
+    for (int i = 0; i < this.m; i++) {
+      if (this.Table[this.probe(key, i)] == -1) {
+        this.Table[this.probe(key, i)] = key;
+        return i;
+      }
+    }
+    return this.m;
   }
 
   /**
@@ -35,21 +40,35 @@ public class OpenAddressing extends SimpleHashSet {
    */
   @Override
   public int remove(int key) {
-    // TODO
-    throw new NotImplementedException("OpenAddressing::remove");
+    for (int i = 0; i < this.m; i++) {
+      if (this.Table[this.probe(key, i)] == key) {
+        this.Table[this.probe(key, i)] = -1;
+        return i;
+      }
+    }
+    return this.m;
   }
 
   /** Returns whether the key is in the set */
   @Override
   public boolean contains(int key) {
-    // TODO
-    throw new NotImplementedException("OpenAddressing::contains");
+    for (int i = 0; i < this.m; i++) {
+      if (this.Table[this.probe(key, i)] == key) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /** Return how many keys are currently in the set */
   @Override
   long size() {
-    // TODO
-    throw new NotImplementedException("OpenAddressing::size");
+    int n = 0;
+    for (int i = 0; i < this.m; i++) {
+      if (this.Table[i] != -1) {
+        n++;
+      }
+    }
+    return n;
   }
 }
