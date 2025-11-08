@@ -1,0 +1,8 @@
+#!/bin/bash
+
+tail -n +1 ./worldcities.csv | awk -F, '{print $4}' | sort | uniq | while IFS= read -r country;
+do
+	average=$(./analyze average "$country")
+	echo "$country $average"
+done
+

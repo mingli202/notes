@@ -1,0 +1,3 @@
+#!/bin/bash
+
+gcc minicalc.c -lm -Wall -o minicalc

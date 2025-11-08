@@ -1,0 +1,60 @@
+#!/bin/bash
+
+function rows-for() {
+	local country="$1"
+	grep "^.*,.*,.*,$country,.*,.*,.*,.*" ./worldcities.csv
+}
+
+function count(){
+	rows-for "$1" | wc -l
+}
+
+function sum(){
+	local s=0
+
+	while IFS= read -r line; do
+		s=$((s+line))
+	done;
+
+	echo $s
+}
+
+function total(){
+	local country="$1"
+
+	local s=0
+	awk -F, "\$4 == \"$country\" {print \$8}" ./worldcities.csv | sum
+}
+
+function average(){
+	local t=$(total "$1")
+	local c=$(count "$1")
+
+	if [[ c -eq 0 ]]; then
+		echo 0
+	else
+		echo $((t / c))
+	fi
+}
+
+if [[ $# != 2 ]]; then
+	>&2 echo "Usage: analyze <command> <country>"
+	exit 1
+fi
+
+case $1 in
+	"count")
+		count "$2"
+		;;
+	"total")
+		total "$2"
+		;;
+	"average")
+		average "$2"
+		;;
+	*)
+		>&2 echo "Usage: analyze <command> <country>"
+		exit 1
+		;;
+esac
+

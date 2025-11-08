@@ -1,0 +1,3 @@
+Q1: I used rsync to copy the file from my local machine to the server.
+Q2: I did `brew install rsync` to install the rsync command.
+Q3: I did `rsync -a ~/Downloads/mliu8-key mliu8@mimi.cs.mcgill.ca:~/.ssh` to copy the file from my local machine to the server.

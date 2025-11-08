@@ -1,0 +1,48 @@
+#!/bin/bash
+
+# get-homework.sh
+#
+# This script downloads the homework for this class.
+#
+# Usage:
+#   get-homework.sh <hw-number>
+#
+# Example:
+#   get-homework.sh 1
+#
+# This script must be run from the homework directory.
+# It must not be run from any other directory.
+#
+# This script must not be sensitive to the current working directory.
+# For example, if I'm in the labs directory, the command-line for running
+# get-homework might look like this:
+#   jerrin1@teach-node-07:comp-206/labs$ ~/comp-206/homework/hw2/get-homework.sh 1
+#
+# This script must not be sensitive to the current working directory.
+# For example, if I'm in the labs directory, the command-line for running
+# get-homework might look like this:
+#   jerrin1@teach-node-07:comp-206/labs$ ~/comp-206/homework/hw2/get-homework.sh 1
+
+HOMEWORK_DIR="$HOME/comp-206/homework"
+
+if [[ $# -ne 1 ]]; then
+	echo "Usage: get-homework <hw-number>"
+	exit 0
+fi
+
+hw_number=$1
+
+if [[ -d "$HOMEWORK_DIR/hw$hw_number" ]]; then
+	echo "Homework $hw_number directory already exists. Overwrite? [y/n]"
+	read -r answer
+
+	if [[ "$answer" == "n" ]]; then
+		exit 0
+	fi
+
+	rm -rf "$HOMEWORK_DIR/hw$hw_number"
+fi
+
+REPOSITORY="fall2025-comp206:hw$hw_number.git"
+
+git clone $REPOSITORY "$HOMEWORK_DIR/hw$hw_number"

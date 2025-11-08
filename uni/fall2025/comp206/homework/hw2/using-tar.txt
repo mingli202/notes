@@ -1,0 +1,27 @@
+Q1.1: how do you use tar to create an archive?
+
+tar -czvf archive.tar.gz directory-to-archive
+
+Q1.2: how do you use tar to list the contents of an archive?
+
+tar -tzvf archive.tar.gz
+
+Q1.3: how do you use tar to extract the entire contents of an archive?
+
+tar -xzvf archive.tar.gz
+
+Q1.4: by default, where do the files get extracted to?
+
+By default, the files get extracted to the current directory.
+
+Q1.5: what is the significance of the two extensions `.tar.gz`?
+
+- .tar means a tarball: a single archive that bundles multiple files/directories without compression.
+
+- .gz means the tarball was compressed with gzip.
+
+- So .tar.gz (or .tgz) is a gzipped tar archive: first tar bundles, then gzip compresses.
+
+Q1.6: what is a 'tarbomb'? Why could extracting one be dangerous?
+
+A tarbomb is a tar archive that, when extracted, spills many files directly into the current directory (or creates/overwrites files in unexpected locations) instead of containing them within a single top-level directory. This is dangerous because it can clutter your working directory, overwrite existing files, or, with malicious paths (like absolute paths or ../), place files outside the intended location.
