@@ -1,4 +1,4 @@
-all: build_main build_stringbuilder build
+sb_test: build_main build_stringbuilder build
 
 build_main:
 	gcc -c main.c
