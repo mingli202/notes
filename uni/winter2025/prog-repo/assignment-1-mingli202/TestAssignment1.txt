@@ -1,0 +1,12 @@
+-------------------------------------------------------------------------------
+Test set: TestAssignment1
+-------------------------------------------------------------------------------
+Tests run: 100, Failures: 2, Errors: 0, Skipped: 0, Time elapsed: 0.111 sec <<< FAILURE! - in TestAssignment1
+masteryTestMonsterTakeActionRage5()  Time elapsed: 0.004 sec  <<< FAILURE!
+org.opentest4j.AssertionFailedError: The monster should move to the next tile ==> expected: <1> but was: <0>
+	at TestAssignment1.masteryTestMonsterTakeActionRage5(TestAssignment1.java:1047)
+
+masteryTestLanceforgedTakeActionMultipleTroops()  Time elapsed: 0 sec  <<< FAILURE!
+org.opentest4j.AssertionFailedError: The Lanceforged should only attack the first Monster in range. ==> expected: <100.0> but was: <80.0>
+	at TestAssignment1.masteryTestLanceforgedTakeActionMultipleTroops(TestAssignment1.java:2799)
+
