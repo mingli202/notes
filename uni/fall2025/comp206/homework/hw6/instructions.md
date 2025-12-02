@@ -2,7 +2,7 @@
 
 - Soft due date: Monday, 3 November end-of-day
 - **Submission instructions.** As before, you must push your repo and receive
-  full marks from the autograder.
+  full marks from the autograder. 
 
 This assignment is for you:
 - to continue practicing using arrays and handling strings and pointers in C

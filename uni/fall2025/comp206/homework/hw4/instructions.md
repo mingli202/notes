@@ -1,6 +1,6 @@
 # COMP 206 - Fall 2025 - Homework 4: basics of C programming
 
-This one is short!
+This one is short! 
 
 ## Part 1: compiling a program
 
