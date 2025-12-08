@@ -3,6 +3,7 @@
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/socket.h>
 #include <unistd.h>
 
@@ -66,6 +67,11 @@ int main(int argc, char *argv[]) {
       }
     } else {
       printf("%s", buf);
+      fflush(stdout);
+      if (strcmp("Sorry, the server is full.\n", buf) == 0) {
+        fclose(server);
+        return 0;
+      }
     }
 
     usleep(100 * 1000); // wait 100ms before checking again
