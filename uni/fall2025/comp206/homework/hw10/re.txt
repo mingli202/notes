@@ -1,0 +1,33 @@
+The unsafe part is the read_stdin_line function because it doesn't check for bounds and can cause a buffer overflow.
+
+The instrcution that sets the variables `admin` and `login_sucessful` with zero are:
+  0x0000000000001215 <+12>:    mov    DWORD PTR [rbp-0x4],0x0  # for admin
+  0x000000000000121c <+19>:    mov    DWORD PTR [rbp-0x8],0x0  # for login_successful
+
+There is no instruction to initialize `buf` because it is not initialized in the code. Moreover, `buf` is immediately set by the `read_stdin_line` function so the compiler deemed it unecessary.
+
+The address `rbp-0x30` is passed to the function in the instruction
+  0x000000000000122f <+38>:    lea    rax,[rbp-0x30]
+
+Higher addresses (stack top)
+┌────────────────────────────────┐
+│ [rbp]         ← old rbp        │
+├────────────────────────────────┤
+│ [rbp-0x4]     admin            │ 4 bytes
+├────────────────────────────────┤
+│ [rbp-0x8]     login_successful │ 4 bytes
+├────────────────────────────────┤
+│ [rbp-0x9]     buf[39]          │
+│ ...           ...              │
+│ [rbp-0x30]    buf[0]           │ 40 bytes
+├────────────────────────────────┤
+│ (unused gap)                   │
+└────────────────────────────────┘
+Lower addresses (stack bottom)
+
+My chosen string is 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'. It works because it has 41 'a', causing a buffer overflow.
+Based on the address map, the 41rst character will cause `login_successful` to be true, successfully logging us as the admin.
+
+The flag is "YOUARE_A_TETRISCHAMPION"
+
+A small change would be to check whether `login_successfull` is equal to 1 instead of doing `!login_successful`.

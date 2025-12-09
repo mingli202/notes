@@ -1,0 +1,31 @@
+The three pillars of information security are confidentiality, integrity, and availability (the CIA triad):
+- Confidentiality ensures that information is accessible only to authorized parties.
+- Integrity ensures that information remains accurate, complete, and unaltered unless modified by authorized means.
+- Availability ensures that information and systems are accessible and usable when needed by authorized users.
+
+Attack analysis:
+- The ransomware attack on hospital patient records primarily undermines availability, as it prevents legitimate access to critical data until payment is made.
+- The data theft attack on the payment processor's database primarily undermines confidentiality, as it exposes sensitive information to unauthorized parties.
+
+Diffie-Hellman key exchange:
+Two parties use Diffie-Hellman to establish a shared secret key over an insecure public channel without having pre-shared secrets. This is useful when:
+- The parties have no prior secure way to exchange keys (e.g., first-time communication)
+- They need forward secrecy (compromise of long-term keys doesn't reveal past session keys)
+- They want to avoid the overhead of physically delivering keys (common in internet protocols like TLS/SSL)
+The algorithm allows each party to combine their own private key with the other's public value to independently compute the same shared secret, while eavesdroppers cannot derive it.
+
+RSA proof of private key ownership:
+RSA can prove private key ownership through digital signatures. The owner creates a signature by encrypting a message hash with their private key. Anyone can verify this by decrypting it with the corresponding public key and comparing it to a freshly computed hash of the message. Successful verification proves that:
+- The message originated from the private key holder (authentication)
+- The message wasn't tampered with (integrity)
+- The signer cannot later deny signing it (non-repudiation)
+
+Preshared key authentication (HMAC):
+With preshared key K, you can attach a Message Authentication Code (MAC) using HMAC (Hash-based MAC):
+1. Compute HMAC(K, message) = H(K ⊕ opad || H(K ⊕ ipad || message))
+	- Where H is a cryptographic hash function (e.g., SHA-256)
+	- opad and ipad are padding constants
+2. Append this MAC to the plaintext message
+3. I recompute the HMAC using my copy of K and the received message
+4. If my computed MAC matches yours, I verify you authored it and it wasn't altered
+This provides authentication and integrity without encryption, as the message remains readable while the MAC ensures its origin and detects any tampering.
