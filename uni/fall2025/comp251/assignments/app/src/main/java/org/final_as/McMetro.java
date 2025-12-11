@@ -59,8 +59,31 @@ public class McMetro {
 
   // Returns all passengers in the system whose names start with firstLetters
   ArrayList<String> searchForPassengers(String firstLetters) {
-    // TODO: your implementation here
-    return new ArrayList<>();
+    // your implementation here
+    TrieNode node = this.trie;
+    ArrayList<String> names = new ArrayList<>();
+
+    for (var c : firstLetters.toCharArray()) {
+      node = node.children.get(c);
+
+      if (node == null) {
+        return names;
+      }
+    }
+
+    ArrayList<TrieNode> stack = new ArrayList<>();
+    stack.add(node);
+
+    while (stack.size() > 0) {
+      node = stack.removeLast();
+      stack.addAll(node.children.values());
+
+      if (node.endOfWord) {
+        names.add(node.name);
+      }
+    }
+
+    return names;
   }
 
   // Return how many ticket checkers will be hired
