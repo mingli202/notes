@@ -58,7 +58,16 @@ public class McMetro {
   }
 
   // Maximum number of passengers that can be transported from start to end
-  int maxPassengers(BuildingID start, BuildingID end) { return 0; }
+  int maxPassengers(BuildingID start, BuildingID end) {
+    var rep1 = this.disjointSet.find(start);
+    var rep2 = this.disjointSet.find(end);
+
+    if (rep1 != rep2) {
+      return 0;
+    }
+
+    return 0;
+  }
 
   // Returns a list of trackIDs that connect to every building maximizing total
   // network capacity taking cost into account
