@@ -72,8 +72,48 @@ public class McMetro {
   // Returns a list of trackIDs that connect to every building maximizing total
   // network capacity taking cost into account
   TrackID[] bestMetroSystem() {
-    // TODO: your implementation here
-    return new TrackID[0];
+    // your implementation here
+
+    Arrays.sort(this.tracks, new Comparator<Track>() {
+      @Override
+      public int compare(Track o1, Track o2) {
+        return goodNess(o2) - goodNess(o1);
+      }
+    });
+
+    ArrayList<TrackID> bestTracks = new ArrayList<>();
+
+    NaiveDisjointSet<BuildingID> buildings = new NaiveDisjointSet<>();
+
+    for (var building : this.buildingTable.keySet()) {
+      buildings.add(building);
+    }
+
+    for (var track : this.tracks) {
+      var b1 = track.startBuildingId();
+      var b2 = track.endBuildingId();
+
+      var rep1 = buildings.find(b1);
+      var rep2 = buildings.find(b2);
+
+      if (rep1.equals(rep2)) {
+        continue;
+      }
+
+      bestTracks.add(track.id());
+      buildings.union(b1, b2);
+    }
+
+    return (TrackID[])bestTracks.toArray();
+  }
+
+  private int goodNess(Track track) {
+    var startBuilding = this.buildingTable.get(track.startBuildingId());
+    var endBuilding = this.buildingTable.get(track.endBuildingId());
+
+    return Math.min(
+        Math.min(startBuilding.occupants(), endBuilding.occupants()),
+        track.capacity());
   }
 
   int nPeopleTravel(BuildingID start, BuildingID end) {
