@@ -91,12 +91,31 @@ public class McMetro {
   static int hireTicketCheckers(int[][] schedules) {
     // your implementation here
 
-    Arrays.sort(schedules, new StartingTimeComparator());
+    Arrays.sort(schedules, new TimeComparator()); // sort by end time
+    HashMap<Integer, Integer> memo = new HashMap<>();
 
-    for (var schedule : schedules) {
+    return dp(0, schedules, memo);
+  }
+
+  static int dp(int index, int[][] schedules, HashMap<Integer, Integer> memo) {
+    if (index >= schedules.length) {
+      return 0;
     }
 
-    return 0;
+    if (memo.containsKey(index)) {
+      return index;
+    }
+
+    int n = dp(index + 1, schedules, memo); // skip
+
+    if (index + 1 < schedules.length &&
+        schedules[index + 1][1] <= schedules[index][0]) {
+      n = Math.max(n, dp(index + 1, schedules, memo) + 1); // take
+    }
+
+    memo.put(index, n);
+
+    return n;
   }
 }
 
@@ -106,9 +125,9 @@ class TrieNode {
   String name = null;
 }
 
-class StartingTimeComparator implements Comparator<int[]> {
+class TimeComparator implements Comparator<int[]> {
   @Override
   public int compare(int[] a, int[] b) {
-    return a[0] - b[0];
+    return b[1] - a[1];
   }
 }
