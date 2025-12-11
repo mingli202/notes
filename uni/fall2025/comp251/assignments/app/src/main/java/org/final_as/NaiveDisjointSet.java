@@ -31,10 +31,10 @@ public class NaiveDisjointSet<T> {
     if (rankA < rankB) {
       parentMap.put(find(a), find(b));
     } else {
-      parentMap.put(find(a), find(b));
+      parentMap.put(find(b), find(a));
 
       if (rankA == rankB) {
-        this.rank.put(b, rankB + 1);
+        this.rank.put(a, rankA + 1);
       }
     }
   }
