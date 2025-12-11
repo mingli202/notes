@@ -1,4 +1,4 @@
-package org.final;
+package org.final_as;
 
 import java.io.Serializable;
 
