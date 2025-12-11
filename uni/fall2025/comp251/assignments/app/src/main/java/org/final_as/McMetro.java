@@ -41,13 +41,14 @@ public class McMetro {
 
     TrieNode node = this.trie;
 
+    name = name.toLowerCase();
     for (Character c : name.toCharArray()) {
       node.children.putIfAbsent(c, new TrieNode());
       node = node.children.get(c);
     }
 
     node.endOfWord = true;
-    node.name = name;
+    node.name = name.substring(0, 1).toUpperCase() + name.substring(1);
   }
 
   // Do not change this
