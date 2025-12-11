@@ -7,6 +7,8 @@ public class McMetro {
   protected Track[] tracks;
   protected HashMap<BuildingID, Building> buildingTable = new HashMap<>();
 
+  private TrieNode trie = new TrieNode();
+
   // You may initialize anything you need in the constructor
   McMetro(Track[] tracks, Building[] buildings) {
     this.tracks = tracks;
@@ -32,7 +34,20 @@ public class McMetro {
 
   // Adds a passenger to the system
   void addPassenger(String name) {
-    // TODO: your implementation here
+    // your implementation here
+    if (name == null || name.isEmpty()) {
+      return;
+    }
+
+    TrieNode node = this.trie;
+
+    for (Character c : name.toCharArray()) {
+      node.children.putIfAbsent(c, new TrieNode());
+      node = node.children.get(c);
+    }
+
+    node.endOfWord = true;
+    node.name = name;
   }
 
   // Do not change this
@@ -53,4 +68,10 @@ public class McMetro {
     // TODO: your implementation here
     return 0;
   }
+}
+
+class TrieNode {
+  Map<Character, TrieNode> children = new HashMap<>();
+  boolean endOfWord = false;
+  String name = null;
 }
