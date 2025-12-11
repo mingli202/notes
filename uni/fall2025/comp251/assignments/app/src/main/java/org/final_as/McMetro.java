@@ -1,6 +1,6 @@
 package org.final_as;
 
-import java.lang.Math.*;
+import java.lang.Math;
 import java.util.*;
 
 public class McMetro {
@@ -9,27 +9,74 @@ public class McMetro {
 
   private TrieNode trie = new TrieNode();
 
+  private HashMap<BuildingID, HashSet<BuildingID>> ad = new HashMap<>();
+  private NaiveDisjointSet<BuildingID> disjointSet = new NaiveDisjointSet<>();
+
+  private HashMap<BuildingID[], Track> tracksTable = new HashMap<>();
+
   // You may initialize anything you need in the constructor
   McMetro(Track[] tracks, Building[] buildings) {
     this.tracks = tracks;
 
     // Populate buildings table
     for (Building building : buildings) {
-      buildingTable.putIfAbsent(building.id(), building);
+      this.buildingTable.putIfAbsent(building.id(), building);
+    }
+
+    for (var track : tracks) {
+      var b1 = track.startBuildingId();
+      var b2 = track.endBuildingId();
+
+      this.ad.putIfAbsent(b1, new HashSet<>());
+      this.ad.putIfAbsent(b2, new HashSet<>());
+
+      this.ad.get(b1).add(b2);
+      this.ad.get(b2).add(b1);
+
+      this.tracksTable.put(new BuildingID[] {b1, b2}, track);
+      this.tracksTable.put(new BuildingID[] {b2, b1}, track);
+    }
+
+    HashSet<BuildingID> seen = new HashSet<>();
+
+    for (var buildingId : this.ad.keySet()) {
+      this.discoverIslands(buildingId, seen);
+    }
+  }
+
+  private void discoverIslands(BuildingID curr, HashSet<BuildingID> seen) {
+    if (seen.contains(curr)) {
+      return;
+    }
+    seen.add(curr);
+    this.disjointSet.add(curr);
+
+    for (var other : this.ad.get(curr)) {
+      this.disjointSet.union(other, curr);
+      this.discoverIslands(other, seen);
     }
   }
 
   // Maximum number of passengers that can be transported from start to end
-  int maxPassengers(BuildingID start, BuildingID end) {
-    // TODO: your implementation here
-    return 0;
-  }
+  int maxPassengers(BuildingID start, BuildingID end) { return 0; }
 
   // Returns a list of trackIDs that connect to every building maximizing total
   // network capacity taking cost into account
   TrackID[] bestMetroSystem() {
     // TODO: your implementation here
     return new TrackID[0];
+  }
+
+  int nPeopleTravel(BuildingID start, BuildingID end) {
+
+    var startBuilding = this.buildingTable.get(start);
+    var endBuilding = this.buildingTable.get(end);
+    var track = this.tracksTable.getOrDefault(new BuildingID[] {start, end},
+                                              new Track());
+
+    return Math.min(
+        Math.min(startBuilding.occupants(), endBuilding.occupants()),
+        track.capacity());
   }
 
   // Adds a passenger to the system
