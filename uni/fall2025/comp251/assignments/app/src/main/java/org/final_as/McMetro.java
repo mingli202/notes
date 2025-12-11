@@ -88,8 +88,14 @@ public class McMetro {
   }
 
   // Return how many ticket checkers will be hired
-  static int hireTicketCheckers(int[][] schedule) {
-    // TODO: your implementation here
+  static int hireTicketCheckers(int[][] schedules) {
+    // your implementation here
+
+    Arrays.sort(schedules, new StartingTimeComparator());
+
+    for (var schedule : schedules) {
+    }
+
     return 0;
   }
 }
@@ -98,4 +104,11 @@ class TrieNode {
   Map<Character, TrieNode> children = new HashMap<>();
   boolean endOfWord = false;
   String name = null;
+}
+
+class StartingTimeComparator implements Comparator<int[]> {
+  @Override
+  public int compare(int[] a, int[] b) {
+    return a[0] - b[0];
+  }
 }
