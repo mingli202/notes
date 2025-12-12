@@ -107,7 +107,7 @@ public class McMetro {
       buildings.union(b1, b2);
     }
 
-    return (TrackID[])bestTracks.toArray();
+    return bestTracks.toArray(new TrackID[bestTracks.size()]);
   }
 
   private int goodNess(Track track) {
