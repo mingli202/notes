@@ -17,6 +17,10 @@ public class McMetro {
 
   // You may initialize anything you need in the constructor
   McMetro(Track[] tracks, Building[] buildings) {
+    if (tracks == null) {
+      tracks = new Track[0];
+    }
+
     this.tracks = tracks;
 
     // Populate buildings table
