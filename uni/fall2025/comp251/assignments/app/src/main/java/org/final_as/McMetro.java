@@ -1,6 +1,5 @@
 package org.final_as;
 
-import com.google.gson.Gson;
 import java.lang.Math;
 import java.util.*;
 
@@ -11,7 +10,6 @@ public class McMetro {
   private TrieNode trie = new TrieNode();
 
   private HashMap<BuildingID, HashSet<BuildingID>> ad = new HashMap<>();
-  private NaiveDisjointSet<BuildingID> disjointSet = new NaiveDisjointSet<>();
 
   private HashMap<BuildingID[], Track> tracksTable = new HashMap<>();
 
@@ -41,40 +39,10 @@ public class McMetro {
       this.tracksTable.put(new BuildingID[] {b1, b2}, track);
       this.tracksTable.put(new BuildingID[] {b2, b1}, track);
     }
-
-    HashSet<BuildingID> seen = new HashSet<>();
-
-    for (var buildingId : this.ad.keySet()) {
-      this.disjointSet.add(buildingId);
-    }
-    for (var buildingId : this.ad.keySet()) {
-      this.discoverIslands(buildingId, seen);
-    }
-  }
-
-  private void discoverIslands(BuildingID curr, HashSet<BuildingID> seen) {
-    if (seen.contains(curr)) {
-      return;
-    }
-    seen.add(curr);
-
-    for (var other : this.ad.get(curr)) {
-      this.disjointSet.union(other, curr);
-      this.discoverIslands(other, seen);
-    }
   }
 
   // Maximum number of passengers that can be transported from start to end
-  int maxPassengers(BuildingID start, BuildingID end) {
-    var rep1 = this.disjointSet.find(start);
-    var rep2 = this.disjointSet.find(end);
-
-    if (rep1 != rep2) {
-      return 0;
-    }
-
-    return 0;
-  }
+  int maxPassengers(BuildingID start, BuildingID end) { return 0; }
 
   // Returns a list of trackIDs that connect to every building maximizing total
   // network capacity taking cost into account
@@ -119,8 +87,9 @@ public class McMetro {
     var endBuilding = this.buildingTable.get(track.endBuildingId());
 
     return Math.min(
-        Math.min(startBuilding.occupants(), endBuilding.occupants()),
-        track.capacity());
+               Math.min(startBuilding.occupants(), endBuilding.occupants()),
+               track.capacity()) /
+        track.cost();
   }
 
   // Adds a passenger to the system
@@ -185,37 +154,18 @@ public class McMetro {
   // Return how many ticket checkers will be hired
   static int hireTicketCheckers(int[][] schedules) {
     // your implementation here
-    Arrays.sort(schedules, new TimeComparator()); // sort by start time
-    HashMap<String, Integer> memo = new HashMap<>();
+    Arrays.sort(schedules, new TimeComparator()); // sort by end time
 
-    Gson gson = new Gson();
-    System.out.println(gson.toJson(schedules));
+    int n = 0;
 
-    return dp(0, schedules, memo, Integer.MIN_VALUE);
-  }
+    int previousEndTime = Integer.MIN_VALUE;
 
-  private static int dp(int index, int[][] schedules,
-                        HashMap<String, Integer> memo, int previousEnd) {
-    if (index >= schedules.length) {
-      return 0;
+    for (var s : schedules) {
+      if (s[0] >= previousEndTime) {
+        n++;
+        previousEndTime = s[1];
+      }
     }
-
-    var canBeTaken = schedules[index][0] >= previousEnd;
-
-    var key = "" + index + canBeTaken;
-
-    if (memo.containsKey(key)) {
-      return memo.get(key);
-    }
-
-    int n = dp(index + 1, schedules, memo, previousEnd); // skip
-
-    if (canBeTaken) {
-      n = Math.max(n, dp(index + 1, schedules, memo, schedules[index][1]) +
-                          1); // take
-    }
-
-    memo.put(key, n);
 
     return n;
   }
@@ -230,6 +180,6 @@ class TrieNode {
 class TimeComparator implements Comparator<int[]> {
   @Override
   public int compare(int[] a, int[] b) {
-    return a[0] - b[0];
+    return a[1] - b[1];
   }
 }
