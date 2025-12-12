@@ -40,6 +40,9 @@ public class McMetro {
     HashSet<BuildingID> seen = new HashSet<>();
 
     for (var buildingId : this.ad.keySet()) {
+      this.disjointSet.add(buildingId);
+    }
+    for (var buildingId : this.ad.keySet()) {
       this.discoverIslands(buildingId, seen);
     }
   }
@@ -49,7 +52,6 @@ public class McMetro {
       return;
     }
     seen.add(curr);
-    this.disjointSet.add(curr);
 
     for (var other : this.ad.get(curr)) {
       this.disjointSet.union(other, curr);
@@ -116,18 +118,6 @@ public class McMetro {
         track.capacity());
   }
 
-  int nPeopleTravel(BuildingID start, BuildingID end) {
-
-    var startBuilding = this.buildingTable.get(start);
-    var endBuilding = this.buildingTable.get(end);
-    var track = this.tracksTable.getOrDefault(new BuildingID[] {start, end},
-                                              new Track());
-
-    return Math.min(
-        Math.min(startBuilding.occupants(), endBuilding.occupants()),
-        track.capacity());
-  }
-
   // Adds a passenger to the system
   void addPassenger(String name) {
     // your implementation here
@@ -160,6 +150,8 @@ public class McMetro {
     TrieNode node = this.trie;
     ArrayList<String> names = new ArrayList<>();
 
+    firstLetters = firstLetters.toLowerCase();
+
     for (var c : firstLetters.toCharArray()) {
       node = node.children.get(c);
 
@@ -173,12 +165,15 @@ public class McMetro {
 
     while (stack.size() > 0) {
       node = stack.removeLast();
+      System.out.println(node.children);
       stack.addAll(node.children.values());
 
       if (node.endOfWord) {
         names.add(node.name);
       }
     }
+
+    Collections.sort(names);
 
     return names;
   }
