@@ -188,7 +188,8 @@ public class McMetro {
     return dp(0, schedules, memo);
   }
 
-  static int dp(int index, int[][] schedules, HashMap<Integer, Integer> memo) {
+  private static int dp(int index, int[][] schedules,
+                        HashMap<Integer, Integer> memo) {
     if (index >= schedules.length) {
       return 0;
     }
