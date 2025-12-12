@@ -1,5 +1,6 @@
 package org.final_as;
 
+import com.google.gson.Gson;
 import java.lang.Math;
 import java.util.*;
 
@@ -165,7 +166,6 @@ public class McMetro {
 
     while (stack.size() > 0) {
       node = stack.removeLast();
-      System.out.println(node.children);
       stack.addAll(node.children.values());
 
       if (node.endOfWord) {
@@ -181,31 +181,37 @@ public class McMetro {
   // Return how many ticket checkers will be hired
   static int hireTicketCheckers(int[][] schedules) {
     // your implementation here
+    Arrays.sort(schedules, new TimeComparator()); // sort by start time
+    HashMap<String, Integer> memo = new HashMap<>();
 
-    Arrays.sort(schedules, new TimeComparator()); // sort by end time
-    HashMap<Integer, Integer> memo = new HashMap<>();
+    Gson gson = new Gson();
+    System.out.println(gson.toJson(schedules));
 
-    return dp(0, schedules, memo);
+    return dp(0, schedules, memo, Integer.MIN_VALUE);
   }
 
   private static int dp(int index, int[][] schedules,
-                        HashMap<Integer, Integer> memo) {
+                        HashMap<String, Integer> memo, int previousEnd) {
     if (index >= schedules.length) {
       return 0;
     }
 
-    if (memo.containsKey(index)) {
-      return index;
+    var canBeTaken = schedules[index][0] >= previousEnd;
+
+    var key = "" + index + canBeTaken;
+
+    if (memo.containsKey(key)) {
+      return memo.get(key);
     }
 
-    int n = dp(index + 1, schedules, memo); // skip
+    int n = dp(index + 1, schedules, memo, previousEnd); // skip
 
-    if (index + 1 < schedules.length &&
-        schedules[index + 1][1] <= schedules[index][0]) {
-      n = Math.max(n, dp(index + 1, schedules, memo) + 1); // take
+    if (canBeTaken) {
+      n = Math.max(n, dp(index + 1, schedules, memo, schedules[index][1]) +
+                          1); // take
     }
 
-    memo.put(index, n);
+    memo.put(key, n);
 
     return n;
   }
@@ -220,6 +226,6 @@ class TrieNode {
 class TimeComparator implements Comparator<int[]> {
   @Override
   public int compare(int[] a, int[] b) {
-    return b[1] - a[1];
+    return a[0] - b[0];
   }
 }
