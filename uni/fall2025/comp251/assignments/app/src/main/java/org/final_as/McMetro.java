@@ -9,9 +9,12 @@ public class McMetro {
 
   private TrieNode trie = new TrieNode();
 
-  private HashMap<BuildingID, HashSet<BuildingID>> ad = new HashMap<>();
+  private HashMap<BuildingID, HashSet<Track>> ad = new HashMap<>();
 
-  private HashMap<BuildingID[], Track> tracksTable = new HashMap<>();
+  // private HashMap<BuildingID[], Track> tracksTable = new HashMap<>();
+
+  private HashMap<TrackID, Integer> capacityTable = new HashMap<>();
+  private HashMap<TrackID, Integer> flowTable = new HashMap<>();
 
   // You may initialize anything you need in the constructor
   McMetro(Track[] tracks, Building[] buildings) {
@@ -28,21 +31,93 @@ public class McMetro {
 
     for (var track : tracks) {
       var b1 = track.startBuildingId();
-      var b2 = track.endBuildingId();
 
       this.ad.putIfAbsent(b1, new HashSet<>());
-      this.ad.putIfAbsent(b2, new HashSet<>());
 
-      this.ad.get(b1).add(b2);
-      this.ad.get(b2).add(b1);
+      this.ad.get(b1).add(track);
 
-      this.tracksTable.put(new BuildingID[] {b1, b2}, track);
-      this.tracksTable.put(new BuildingID[] {b2, b1}, track);
+      // this.tracksTable.put(new BuildingID[] {b1, b2}, track);
+      // this.tracksTable.put(new BuildingID[] {b2, b1}, track);
+
+      this.capacityTable.put(track.id(), this.capacity(track));
+      this.flowTable.put(track.id(), 0);
     }
   }
 
   // Maximum number of passengers that can be transported from start to end
-  int maxPassengers(BuildingID start, BuildingID end) { return 0; }
+  int maxPassengers(BuildingID start, BuildingID end) {
+    if (!this.buildingTable.containsKey(start) ||
+        !this.buildingTable.containsKey(end)) {
+      return 0;
+    }
+
+    int maxFlow = 0;
+
+    while (true) {
+      LinkedList<BuildingID> q = new LinkedList<>();
+      HashSet<BuildingID> seen = new HashSet<>();
+      HashMap<BuildingID, Track> parents = new HashMap<>();
+
+      q.add(start);
+
+      // find a path by doing bfs
+      while (!q.isEmpty()) {
+        var current = q.poll();
+
+        seen.add(current);
+
+        if (current.equals(end)) {
+          break;
+        }
+
+        var tracks = this.ad.get(current);
+
+        for (Track track : tracks) {
+          var flow = this.flowTable.get(track.id());
+          var capacity = this.capacityTable.get(track.id());
+
+          if (!seen.contains(track.endBuildingId()) && flow < capacity) {
+            q.add(track.endBuildingId());
+            parents.putIfAbsent(track.endBuildingId(), track);
+          }
+        }
+      }
+
+      if (!seen.contains(end)) {
+        break;
+      }
+
+      // trace back the path
+      var building = end;
+      int minFlow = Integer.MAX_VALUE;
+
+      while (!building.equals(start)) {
+        var track = parents.get(building);
+        var capacity = capacityTable.get(track.id());
+        var flow = flowTable.get(track.id());
+        var residual = capacity - flow;
+
+        minFlow = Math.min(minFlow, residual);
+        building = track.startBuildingId();
+      }
+
+      // deal with local variable not final error
+      int pathFlow = minFlow;
+
+      // update flows
+      building = end;
+      while (!building.equals(start)) {
+        var track = parents.get(building);
+        this.flowTable.compute(track.id(), (k, v) -> v - pathFlow);
+      }
+
+      maxFlow += pathFlow;
+    }
+
+    return maxFlow;
+  }
+
+  private void heapify(TrackID[] tracks) {}
 
   // Returns a list of trackIDs that connect to every building maximizing total
   // network capacity taking cost into account
@@ -82,14 +157,17 @@ public class McMetro {
     return bestTracks.toArray(new TrackID[bestTracks.size()]);
   }
 
-  private int goodNess(Track track) {
+  private int capacity(Track track) {
     var startBuilding = this.buildingTable.get(track.startBuildingId());
     var endBuilding = this.buildingTable.get(track.endBuildingId());
 
     return Math.min(
-               Math.min(startBuilding.occupants(), endBuilding.occupants()),
-               track.capacity()) /
-        track.cost();
+        Math.min(startBuilding.occupants(), endBuilding.occupants()),
+        track.capacity());
+  }
+
+  private int goodNess(Track track) {
+    return this.capacity(track) / track.cost();
   }
 
   // Adds a passenger to the system
