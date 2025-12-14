@@ -11,8 +11,6 @@ public class McMetro {
 
   private HashMap<BuildingID, HashSet<Track>> ad = new HashMap<>();
 
-  // private HashMap<BuildingID[], Track> tracksTable = new HashMap<>();
-
   private HashMap<TrackID, Integer> capacityTable = new HashMap<>();
   private HashMap<TrackID, Integer> flowTable = new HashMap<>();
 
@@ -35,9 +33,6 @@ public class McMetro {
       this.ad.putIfAbsent(b1, new HashSet<>());
 
       this.ad.get(b1).add(track);
-
-      // this.tracksTable.put(new BuildingID[] {b1, b2}, track);
-      // this.tracksTable.put(new BuildingID[] {b2, b1}, track);
 
       this.capacityTable.put(track.id(), this.capacity(track));
       this.flowTable.put(track.id(), 0);
@@ -108,7 +103,8 @@ public class McMetro {
       building = end;
       while (!building.equals(start)) {
         var track = parents.get(building);
-        this.flowTable.compute(track.id(), (k, v) -> v - pathFlow);
+        this.flowTable.compute(track.id(), (k, v) -> v + pathFlow);
+        building = track.startBuildingId();
       }
 
       maxFlow += pathFlow;
@@ -117,13 +113,10 @@ public class McMetro {
     return maxFlow;
   }
 
-  private void heapify(TrackID[] tracks) {}
-
   // Returns a list of trackIDs that connect to every building maximizing total
   // network capacity taking cost into account
   TrackID[] bestMetroSystem() {
     // your implementation here
-
     Arrays.sort(this.tracks, new Comparator<Track>() {
       @Override
       public int compare(Track o1, Track o2) {
