@@ -22,7 +22,6 @@ public class McMetro {
 
     this.tracks = tracks;
 
-    // Populate buildings table
     for (Building building : buildings) {
       this.buildingTable.putIfAbsent(building.id(), building);
     }
@@ -55,7 +54,6 @@ public class McMetro {
 
       q.add(start);
 
-      // find a path by doing bfs
       while (!q.isEmpty()) {
         var current = q.poll();
 
@@ -82,7 +80,6 @@ public class McMetro {
         break;
       }
 
-      // trace back the path
       var building = end;
       int minFlow = Integer.MAX_VALUE;
 
@@ -96,10 +93,8 @@ public class McMetro {
         building = track.startBuildingId();
       }
 
-      // deal with local variable not final error
       int pathFlow = minFlow;
 
-      // update flows
       building = end;
       while (!building.equals(start)) {
         var track = parents.get(building);
