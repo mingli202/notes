@@ -20,4 +20,10 @@ let assert_nat nat1 nat2 =
 let run =
  fun () ->
   Test.test_list Hm2.q1a_nat_of_int_tests "int to unary" (fun (inp, exp) ->
-      assert_nat (Hm2.q1a_nat_of_int inp) exp)
+      assert_nat (Hm2.q1a_nat_of_int inp) exp);
+
+  Test.test_list Hm2.q1b_int_of_nat_tests "unary to int" (fun (inp, exp) ->
+      Assert.assert_int (Hm2.q1b_int_of_nat inp) exp);
+
+  Test.test_list Hm2.q1c_add_tests "unary add" (fun ((in1, in2), exp) ->
+      assert_nat (Hm2.q1c_add in1 in2) exp)
