@@ -57,8 +57,7 @@ let binomial n k =
 let lucas_tests = [ (0, 2); (1, 1); (2, 3); (3, 4); (4, 7) ]
 
 (* TODO: Implement a tail-recursive helper lucas_helper. *)
-let rec lucas_helper n a b = if n == 0 then b else lucas_helper (n - 1) b (a + b)
+let rec lucas_helper n a b = if n = 0 then b else lucas_helper (n - 1) b (a + b)
 
 (* TODO: Implement lucas by calling lucas_helper. *)
-let lucas n =
-  if n == 0 then 2 else if n == 1 then 1 else lucas_helper (n - 1) 2 1
+let lucas n = if n = 0 then 2 else if n = 1 then 1 else lucas_helper (n - 1) 2 1

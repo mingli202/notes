@@ -42,7 +42,7 @@ let test_list (test_cases : 'a list) (name : string) (f : 'a -> unit) : unit =
       test (Printf.sprintf "%s [%d/%d]" name (i + 1) len) (fun () -> f x))
     test_cases
 
-let eq a b = Assert.assert_bool (a == b) true
+let eq a b = Assert.assert_bool (a = b) true
 
 let eq_f (a : 'a) (b : 'a) (pred : 'a -> 'a -> bool) =
   Assert.assert_bool (pred a b) true
