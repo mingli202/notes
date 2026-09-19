@@ -9,13 +9,4 @@ let run =
       Assert.assert_int (Hm1.binomial a b) expected);
 
   Test.test_list Hm1.lucas_tests "test lucas" (fun (a, expected) ->
-      Assert.assert_int (Hm1.lucas a) expected);
-
-  Test.test_eq "factorial 0" (Hm1.factorial 0) 1;
-  Test.test_eq "factorial 1" (Hm1.factorial 1) 1;
-  Test.test "factorial 3" (fun () -> Assert.assert_int (Hm1.factorial 3) 6);
-  Test.test "factorial 3" (Test.a_eq (Hm1.factorial 3) 6);
-  Test.test_eq "factorial 10" (Hm1.factorial 10)
-    (1 * 2 * 3 * 4 * 5 * 6 * 7 * 8 * 9 * 10);
-
-  Printf.printf "%d" (Hm1.factorial 20)
+      Assert.assert_int (Hm1.lucas a) expected)

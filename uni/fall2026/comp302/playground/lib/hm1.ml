@@ -27,18 +27,12 @@ let binomial_tests =
   [
     (* Your test cases go here. Correct this incorrect test case for the function. *)
     ((0, 0), 1);
+    ((1, 0), 1);
     ((3, 2), 3);
     ((4, 4), 1);
     ((10, 3), 120);
     ((10, 7), 120);
-    ((20, 1), 20);
   ]
-
-let rec factorial (n : int) =
-  let rec fac (n : int) (acc : int) =
-    if n <= 1 then acc else fac (n - 1) (acc * n)
-  in
-  fac n 1
 
 (* TODO: Correct this implementation so that it compiles and returns
          the correct answers.
@@ -46,10 +40,13 @@ let rec factorial (n : int) =
 let binomial n k =
   if n < k then 0
   else
-    let rec factorial (n : int) (acc : int) =
-      if n <= 1 then acc else factorial (n - 1) (acc * n)
+    let factorial (n : int) =
+      let rec fac (n : int) (acc : int) =
+        if n <= 1 then acc else fac (n - 1) (acc * n)
+      in
+      fac n 1
     in
-    factorial n 1 / (factorial k 1 * factorial (n - k) 1)
+    factorial n / (factorial k * factorial (n - k))
 
 (* Question 3: Lucas Numbers *)
 
