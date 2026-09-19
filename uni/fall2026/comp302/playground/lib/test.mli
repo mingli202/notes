@@ -4,10 +4,10 @@ val test : string -> (unit -> unit) -> unit
     Example:
     {[
     (* factorial 3...SUCCESS *)
-    Test.test "factorial 3" (fun () -> assert (Hm1.factorial 3 == 6));
+    Test.test "factorial 3" (fun () -> Assert.assert_int (Hm1.factorial 3) 6);
 
-    (* factorial 3...FAIL: File "test/test_hm1.ml", line 16, characters 37-43: Assertion failed *)
-    Test.test "factorial 3" (fun () -> assert (Hm1.factorial 3 == 5))
+    (* factorial 3...FAIL: Failure("6 != 5") *)
+    Test.test "factorial 3" (fun () -> Assert.assert_int (Hm1.factorial 3) 5)
     ]}
 
     @param title The title of the test
@@ -20,8 +20,15 @@ val test_list : 'a list -> string -> ('a -> unit) -> unit
 
     Example:
     {[
-    Test.test_list Hm1.distance_tests "test distances"
-      (fun ((a, b), expected) -> assert (Hm1.distance a b == expected))
+    (*
+    test binomial [0/5]...SUCCESS
+    test binomial [1/5]...SUCCESS
+    test binomial [2/5]...SUCCESS
+    test binomial [3/5]...SUCCESS
+    test binomial [4/5]...FAIL: Failure("120 != 12")
+    *)
+    Test.test_list Hm1.binomial_tests "test binomial" (fun ((a, b), expected) ->
+        Assert.assert_int (Hm1.binomial a b) expected)
     ]}
 
     @param name The name of the test
@@ -31,19 +38,18 @@ val test_list : 'a list -> string -> ('a -> unit) -> unit
       considered failed if the predicate raises an error *)
 
 val test_eq : string -> 'a -> 'a -> unit
-(** a simple equality check
+(** a simple equality check about whether the two given arguments are equal. It
+    will not tell you the result of either. Instead, use [test] with
+    [Assert.assert_*]. See [test]
 
     Example:
     {[
     (* factorial 0...SUCCESS *)
     Test.test_eq "factorial 0" (Hm1.factorial 0) 1;
 
+    (* factorial 3...FAIL: Failure("false != true") *)
     Test.test_eq "factorial 3" (Hm1.factorial 3) 5
-    (* factorial 3...FAIL: Failure("eq failed") *)
     ]} *)
-
-val assert_bool : bool -> unit
-(** @raise Failure "assert failed" if [b] is false *)
 
 val eq : 'a -> 'a -> unit
 (** assert whether the two given values are equal

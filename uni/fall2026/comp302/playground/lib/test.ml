@@ -38,12 +38,15 @@ let test (title : string) (f : unit -> unit) : unit =
 let test_list (test_cases : 'a list) (name : string) (f : 'a -> unit) : unit =
   let len = List.length test_cases in
   List.iteri
-    (fun i x -> test (Printf.sprintf "%s [%d/%d]" name i len) (fun () -> f x))
+    (fun i x ->
+      test (Printf.sprintf "%s [%d/%d]" name (i + 1) len) (fun () -> f x))
     test_cases
 
-let assert_bool (b : bool) = if b then () else failwith "eq failed"
-let eq a b = assert_bool (a == b)
-let eq_f (a : 'a) (b : 'a) (pred : 'a -> 'a -> bool) = assert_bool (pred a b)
+let eq a b = Assert.assert_bool (a == b) true
+
+let eq_f (a : 'a) (b : 'a) (pred : 'a -> 'a -> bool) =
+  Assert.assert_bool (pred a b) true
+
 let a_eq a b = fun _ -> eq a b
 let a_eq_f a b f = fun _ -> eq_f a b f
 let test_eq (title : string) a b : unit = test title (a_eq a b)

@@ -2,7 +2,7 @@
 let w (f : unit -> unit) =
  fun (name : string) ->
   let s =
-    Printf.sprintf "================= Testing %s =======================" name
+    Printf.sprintf "================= Testing %s =================" name
   in
   Printf.printf "%s\n" s;
   f ()
