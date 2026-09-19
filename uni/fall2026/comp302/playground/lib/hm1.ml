@@ -32,6 +32,12 @@ let binomial_tests =
     ((100000000, 1), 100000000);
   ]
 
+let rec factorial (n : int) =
+  let rec fac (n : int) (acc : int) =
+    if n <= 1 then acc else fac (n - 1) (acc * n)
+  in
+  fac n 1
+
 (* TODO: Correct this implementation so that it compiles and returns
          the correct answers.
 *)
