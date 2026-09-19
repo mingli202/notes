@@ -51,3 +51,25 @@ let testList (test_cases : 'a list) (name : string) (f : 'a -> unit) : unit =
 
 (** raise an error with the given reason *)
 let fail (reason : string) = failwith reason
+
+(** @raise Failure "assert failed" if [b] is false *)
+let assert_bool (b : bool) = if b then () else failwith "eq failed"
+
+(** assert whether the two given values are equal
+    @raise Failure if not equal *)
+let eq a b = assert_bool (a == b)
+
+(** assert whether the two given values are equal with the given predicate that
+    takes in a and b
+    @raise Failure if predicate is false *)
+let eq_f (a : 'a) (b : 'a) (pred : 'a -> 'a -> bool) = assert_bool (pred a b)
+
+(** returns a function to assert whether the two given arguments are equal *)
+let a_eq a b = fun _ -> eq a b
+
+(** returns a function to assert whether the two given arguments are equal with
+    the given predicate *)
+let a_eq_f a b f = fun _ -> eq_f a b f
+
+(** a simple equality check *)
+let test_eq (title : string) a b : unit = test title (a_eq a b)
