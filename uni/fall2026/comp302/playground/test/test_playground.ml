@@ -7,4 +7,6 @@ let w (f : unit -> unit) =
   Printf.printf "%s\n" s;
   f ()
 
-let () = w Test_hm1.run "hm1"
+let () =
+  w Test_hm1.run "hm1";
+  w Test_hm2.run "hm2"
