@@ -77,19 +77,6 @@ let string_split (s : string) : char list =
   in
   string_split_h s 0
 
-let rec parse_eq_list (s : char list) (acc : exp) : exp =
-  match s.[i] with
-  | '(' -> parse_eq_list s (i + 1)
-  | ')' -> Var
-  | 'x' -> Var
-  | '*' -> Times (Var, Var)
-  | '/' -> Times (Var, Var)
-  | '+' -> Plus (Var, Var)
-  | '-' -> Minus (Var, Var)
-  | '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' -> ""
-  | ' ' -> parse_eq_list s (i + 1)
-  | _ -> raise (Invalid_token "unknown token")
-
 (** Finds a string of numbers and return the rest of the string to parse *)
 let rec find_number (s : char list) : string * char list =
   match s with
@@ -110,7 +97,26 @@ let rec find_number (s : char list) : string * char list =
     ]} *)
 let parse_number (s : char list) : exp * char list =
   let str_n, rest = find_number s in
-  (Const (float_of_string str_n), rest)
+  try (Const (float_of_string str_n), rest)
+  with _ ->
+    raise
+      (Invalid_exp
+         (Printf.sprintf "the number found could not be parsed: %s" str_n))
+
+let rec parse_eq_list (s : char list) (acc : exp) : exp =
+  match s with
+  | '(' :: r -> parse_eq_list r acc
+  | ')' :: r -> Var
+  | 'x' :: r -> Var
+  | '*' :: r -> Times (Var, Var)
+  | '/' :: r -> Times (Var, Var)
+  | '+' :: r -> Plus (Var, Var)
+  | '-' :: r -> Plus (Var, Var)
+  | ('0' .. '9' | '.') :: _ ->
+      let e, rest = parse_number s in
+      parse_eq_list rest e
+  | ' ' :: r -> parse_eq_list r acc
+  | _ -> raise (Invalid_token "unknown token")
 
 (** parse the first token because the actual parsing relies on a previous, which
     at the start doesn't have any *)
@@ -123,7 +129,7 @@ let rec parse_eq_first (s : char list) : exp =
   | '/' :: rest -> raise (Invalid_token "cannot start with '/'")
   | '+' :: rest -> raise (Invalid_token "cannot start with '+'")
   | '-' :: rest -> raise (Invalid_token "cannot start with '-'")
-  | ('0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' | '.') :: rest ->
+  | ('0' .. '9' | '.') :: _ ->
       let e, rest = parse_number s in
       parse_eq_list rest e
   | ' ' :: s -> parse_eq_first s
