@@ -73,7 +73,7 @@ let rec q1c_add (n : nat) (m : nat) : nat =
 (** split the given string into a list of char *)
 let string_split (s : string) : char list =
   let rec string_split_h (s : string) (i : int) =
-    if i = String.length s then [] else s.[0] :: string_split_h s (i + 1)
+    if i = String.length s then [] else s.[i] :: string_split_h s (i + 1)
   in
   string_split_h s 0
 
@@ -103,24 +103,23 @@ let parse_number (s : char list) : exp * char list =
       (Invalid_exp
          (Printf.sprintf "the number found could not be parsed: %s" str_n))
 
-let rec parse_eq_list (s : char list) (acc : exp) : exp =
-  match s with
-  | '(' :: r -> parse_eq_list r acc
-  | ')' :: r -> Var
-  | 'x' :: r -> Var
-  | '*' :: r -> Times (Var, Var)
-  | '/' :: r -> Times (Var, Var)
-  | '+' :: r -> Plus (Var, Var)
-  | '-' :: r -> Plus (Var, Var)
-  | ('0' .. '9' | '.') :: _ ->
-      let e, rest = parse_number s in
-      parse_eq_list rest e
-  | ' ' :: r -> parse_eq_list r acc
-  | _ -> raise (Invalid_token "unknown token")
-
-(** parse the first token because the actual parsing relies on a previous, which
-    at the start doesn't have any *)
 let rec parse_eq_first (s : char list) : exp =
+  let rec parse_eq_list (s : char list) (acc : exp) : exp =
+    match s with
+    | '(' :: r -> parse_eq_list r acc
+    | ')' :: r -> Var
+    | 'x' :: r -> Var
+    | '*' :: r -> Times (acc, parse_eq_first r)
+    | '/' :: r -> Times (acc, parse_eq_first r)
+    | '+' :: r -> Plus (acc, parse_eq_first r)
+    | '-' :: r -> Plus (acc, parse_eq_first r)
+    | ('0' .. '9' | '.') :: _ ->
+        let e, rest = parse_number s in
+        parse_eq_list rest e
+    | ' ' :: r -> parse_eq_list r acc
+    | _ -> raise (Invalid_token "unknown token")
+  in
+
   match s with
   | '(' :: rest -> parse_eq_first rest
   | ')' :: rest -> raise (Invalid_token "cannot start with ')'")
