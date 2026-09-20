@@ -51,6 +51,32 @@ val test_eq : string -> 'a -> 'a -> unit
     Test.test_eq "factorial 3" (Hm1.factorial 3) 5
     ]} *)
 
+val test_eq_a : string -> 'a -> 'a -> ('a -> 'a -> unit) -> unit
+(** a simple equality check about whether the two given arguments are equal with
+    a given equality function. It tell you the result if your assert function
+    prints them
+
+    Example:
+    {[
+    let rec exp_to_string exp =
+      match exp with
+      | Hm2.Const value -> sprintf "%f" value
+      | Hm2.Var -> sprintf "%s" "x"
+      | Hm2.Plus (exp1, exp2) ->
+          sprintf "%s + %s" (exp_to_string exp1) (exp_to_string exp2)
+      | Hm2.Times (exp1, exp2) ->
+          sprintf "%s * %s" (exp_to_string exp1) (exp_to_string exp2)
+      | Hm2.Div (exp1, exp2) ->
+          sprintf "%s / %s" (exp_to_string exp1) (exp_to_string exp2)
+
+    let assert_exp e1 e2 = Assert.assert_to_string e1 e2 exp_to_string
+
+    let () =
+      Test.test_eq_a "parse number"
+        (fst (Hm2.parse_number [ '1' ]))
+        (Hm2.Const 1.0) assert_exp
+    ]} *)
+
 val eq : 'a -> 'a -> unit
 (** assert whether the two given values are equal
     @raise Failure if not equal *)

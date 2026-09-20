@@ -50,3 +50,6 @@ let eq_f (a : 'a) (b : 'a) (pred : 'a -> 'a -> bool) =
 let a_eq a b = fun _ -> eq a b
 let a_eq_f a b f = fun _ -> eq_f a b f
 let test_eq (title : string) a b : unit = test title (a_eq a b)
+
+let test_eq_a (title : string) a b (f : 'a -> 'a -> unit) : unit =
+  test title (fun () -> f a b)
