@@ -21,13 +21,13 @@ type exp =
 let rec exp_to_string exp =
   match exp with
   | Const value -> sprintf "%f" value
-  | Var -> sprintf "%s" "x"
+  | Var -> "x"
   | Plus (exp1, exp2) ->
-      sprintf "%s + %s" (exp_to_string exp1) (exp_to_string exp2)
+      sprintf "(%s + %s)" (exp_to_string exp1) (exp_to_string exp2)
   | Times (exp1, exp2) ->
-      sprintf "%s * %s" (exp_to_string exp1) (exp_to_string exp2)
+      sprintf "(%s * %s)" (exp_to_string exp1) (exp_to_string exp2)
   | Div (exp1, exp2) ->
-      sprintf "%s / %s" (exp_to_string exp1) (exp_to_string exp2)
+      sprintf "(%s / %s)" (exp_to_string exp1) (exp_to_string exp2)
 
 (* Question 1 *)
 
