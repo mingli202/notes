@@ -1,3 +1,5 @@
+open Printf
+
 exception Not_implemented
 
 exception Invalid_test_case
@@ -15,6 +17,17 @@ type exp =
   | Plus of exp * exp
   | Times of exp * exp
   | Div of exp * exp
+
+let rec exp_to_string exp =
+  match exp with
+  | Const value -> sprintf "%f" value
+  | Var -> sprintf "%s" "x"
+  | Plus (exp1, exp2) ->
+      sprintf "%s + %s" (exp_to_string exp1) (exp_to_string exp2)
+  | Times (exp1, exp2) ->
+      sprintf "%s * %s" (exp_to_string exp1) (exp_to_string exp2)
+  | Div (exp1, exp2) ->
+      sprintf "%s / %s" (exp_to_string exp1) (exp_to_string exp2)
 
 (* Question 1 *)
 
@@ -78,14 +91,16 @@ let string_split (s : string) : char list =
   string_split_h s 0
 
 (** Finds a string of numbers and return the rest of the string to parse *)
-let rec find_number (s : char list) : string * char list =
-  match s with
-  | (('0' .. '9' | '.') as c) :: rest ->
-      let rest_of_n, final_rest = find_number rest in
-      (String.of_char c ^ rest_of_n, final_rest)
-  | _ -> ("", s)
+let rec find_number (s : string) (i : int) : string * int =
+  if i = String.length s then ("", i)
+  else
+    match s.[i] with
+    | ('0' .. '9' | '.') as c ->
+        let rest_of_n, final_rest = find_number s (i + 1) in
+        (String.of_char c ^ rest_of_n, final_rest)
+    | _ -> ("", i)
 
-(** finds the number and return the rest of the string to parse
+(** finds the number and return the index to the rest of the string to parse
 
     Example:
     {[
@@ -95,44 +110,33 @@ let rec find_number (s : char list) : string * char list =
     (* (Const 123.1) [" ", "+", " ", "x"] *)
     parse_number "123.1 + x"
     ]} *)
-let parse_number (s : char list) : exp * char list =
-  let str_n, rest = find_number s in
+let parse_number (s : string) (i : int) : exp * int =
+  let str_n, rest = find_number s i in
   try (Const (float_of_string str_n), rest)
   with _ ->
     raise
       (Invalid_exp
          (Printf.sprintf "the number found could not be parsed: %s" str_n))
 
-let rec parse_eq_first (s : char list) : exp =
-  let rec parse_eq_list (s : char list) (acc : exp) : exp =
-    match s with
-    | '(' :: r -> parse_eq_list r acc
-    | ')' :: r -> Var
-    | 'x' :: r -> Var
-    | '*' :: r -> Times (acc, parse_eq_first r)
-    | '/' :: r -> Times (acc, parse_eq_first r)
-    | '+' :: r -> Plus (acc, parse_eq_first r)
-    | '-' :: r -> Plus (acc, parse_eq_first r)
-    | ('0' .. '9' | '.') :: _ ->
-        let e, rest = parse_number s in
-        parse_eq_list rest e
-    | ' ' :: r -> parse_eq_list r acc
-    | _ -> raise (Invalid_token "unknown token")
-  in
+let rec parse_eq_acc (s : string) (i : int) (prev : exp option) : exp =
+  if String.length s = 0 then raise (Invalid_exp "empty exp")
+  else if i >= String.length s then Option.get prev
+  else
+    match s.[i] with
+    | '(' -> Var
+    | ')' -> raise (Invalid_token "cannot start with ')'")
+    | 'x' -> Times (Var, Var)
+    | '*' -> Times (Option.get prev, parse_eq_acc s (i + 1) None)
+    | '/' -> Div (Option.get prev, parse_eq_acc s (i + 1) None)
+    | '+' -> Plus (Option.get prev, parse_eq_acc s (i + 1) None)
+    | '-' ->
+        Plus (Option.get prev, Times (Const (-1.0), parse_eq_acc s (i + 1) None))
+    | '0' .. '9' | '.' ->
+        let e, rest_i = parse_number s i in
 
-  match s with
-  | '(' :: rest -> parse_eq_first rest
-  | ')' :: rest -> raise (Invalid_token "cannot start with ')'")
-  | 'x' :: rest -> parse_eq_list rest Var
-  | '*' :: rest -> raise (Invalid_token "cannot start with '*'")
-  | '/' :: rest -> raise (Invalid_token "cannot start with '/'")
-  | '+' :: rest -> raise (Invalid_token "cannot start with '+'")
-  | '-' :: rest -> raise (Invalid_token "cannot start with '-'")
-  | ('0' .. '9' | '.') :: _ ->
-      let e, rest = parse_number s in
-      parse_eq_list rest e
-  | ' ' :: s -> parse_eq_first s
-  | _ -> raise (Invalid_token "unknown token")
+        parse_eq_acc s rest_i (Some e)
+    | ' ' -> parse_eq_acc s (i + 1) prev
+    | c -> raise (Invalid_token (Printf.sprintf "cannot start with %c" c))
 
 (** parse the equation string into an exp so I can feed it to tests without
     having to write out the chain of exp
@@ -163,7 +167,7 @@ let rec parse_eq_first (s : char list) : exp =
     parse_eq "(2 + 8) * (x + 5)";
     parse_eq "(2 * 5) * (x + 5)"
     ]} *)
-let parse_eq (s : string) : exp = parse_eq_first (string_split s)
+let parse_eq (s : string) : exp = parse_eq_acc s 0 None
 
 (** negate the given expression e, but don't resolve the parathensis
 
