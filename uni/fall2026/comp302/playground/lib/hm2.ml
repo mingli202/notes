@@ -104,10 +104,10 @@ let rec find_number (s : string) (i : int) : string * int =
 
     Example:
     {[
-    (* (Const 123.1) [] *)
+    (* (Const 123.1) 5 *)
     parse_number "123.1";
 
-    (* (Const 123.1) [" ", "+", " ", "x"] *)
+    (* (Const 123.1) 5 *)
     parse_number "123.1 + x"
     ]} *)
 let parse_number (s : string) (i : int) : exp * int =
@@ -118,25 +118,67 @@ let parse_number (s : string) (i : int) : exp * int =
       (Invalid_exp
          (Printf.sprintf "the number found could not be parsed: %s" str_n))
 
-let rec parse_eq_acc (s : string) (i : int) (prev : exp option) : exp =
+type op = TimesOp | DivOpt
+
+(** handles the times and divisions. these two operations have a higher priority
+    than plus and minus, we want to evaluate the longest string of times/div or
+    higher first before returning to the original parse_eq_acc so that we can
+    ensure the higher priority operations get computed first
+
+    Example:
+    {[
+    (* Div (Const 4, Times (Const 1, Const 2)) 10 *)
+    parse_times_and_div "1 * 2 / 4 + 1"
+    ]} *)
+let rec parse_times_and_div (s : string) (i : int) (prev : exp option) (op : op)
+    : exp * int =
   if String.length s = 0 then raise (Invalid_exp "empty exp")
-  else if i >= String.length s then Option.get prev
+  else if i >= String.length s then (Option.get prev, i)
   else
     match s.[i] with
-    | '(' -> Var
-    | ')' -> raise (Invalid_token "cannot start with ')'")
-    | 'x' -> Times (Var, Var)
-    | '*' -> Times (Option.get prev, parse_eq_acc s (i + 1) None)
-    | '/' -> Div (Option.get prev, parse_eq_acc s (i + 1) None)
-    | '+' -> Plus (Option.get prev, parse_eq_acc s (i + 1) None)
-    | '-' ->
-        Plus (Option.get prev, Times (Const (-1.0), parse_eq_acc s (i + 1) None))
     | '0' .. '9' | '.' ->
         let e, rest_i = parse_number s i in
+        let op_exp =
+          match op with
+          | TimesOp -> Times (Option.get prev, e)
+          | DivOpt -> Div (Option.get prev, e)
+        in
+        parse_times_and_div s rest_i (Some op_exp) op
+    | '(' -> (Var, i)
+    | ')' -> (Var, i)
+    | '*' -> parse_times_and_div s (i + 1) prev TimesOp
+    | '/' -> parse_times_and_div s (i + 1) prev DivOpt
+    | ' ' -> parse_times_and_div s (i + 1) prev op
+    | _ -> (Option.get prev, i)
 
+(** parses the string of equation while carrying the previous expression *)
+let rec parse_eq_acc (s : string) (i : int) (prev : exp option) : exp * int =
+  if String.length s = 0 then raise (Invalid_exp "empty exp")
+  else if i >= String.length s then (Option.get prev, i)
+  else
+    match s.[i] with
+    | '0' .. '9' | '.' ->
+        let e, rest_i = parse_number s i in
         parse_eq_acc s rest_i (Some e)
+    | '(' ->
+        let e, rest_i = parse_eq_acc s (i + 1) None in
+        parse_eq_acc s rest_i (Some e)
+    | ')' -> (Option.get prev, i)
+    | 'x' -> (Var, i)
+    | '*' ->
+        let e, rest_i = parse_times_and_div s i prev TimesOp in
+        parse_eq_acc s rest_i (Some e)
+    | '/' ->
+        let e, rest_i = parse_times_and_div s i prev DivOpt in
+        parse_eq_acc s rest_i (Some e)
+    | '+' -> (Plus (Option.get prev, fst (parse_eq_acc s (i + 1) None)), i)
+    | '-' ->
+        ( Plus
+            ( Option.get prev,
+              Times (Const (-1.0), fst (parse_eq_acc s (i + 1) None)) ),
+          i )
     | ' ' -> parse_eq_acc s (i + 1) prev
-    | c -> raise (Invalid_token (Printf.sprintf "cannot start with %c" c))
+    | c -> raise (Invalid_token (Printf.sprintf "unknown token %c" c))
 
 (** parse the equation string into an exp so I can feed it to tests without
     having to write out the chain of exp
@@ -167,7 +209,7 @@ let rec parse_eq_acc (s : string) (i : int) (prev : exp option) : exp =
     parse_eq "(2 + 8) * (x + 5)";
     parse_eq "(2 * 5) * (x + 5)"
     ]} *)
-let parse_eq (s : string) : exp = parse_eq_acc s 0 None
+let parse_eq (s : string) : exp = fst (parse_eq_acc s 0 None)
 
 (** negate the given expression e, but don't resolve the parathensis
 

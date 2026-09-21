@@ -53,6 +53,8 @@ let run =
         Plus (Const 10.0, Plus (Const 5.0, Times (Const (-1.0), Const 6.0))) );
       ("10 + 5 * 6", Plus (Const 10.0, Times (Const 5.0, Const 6.0)));
       ("10 * 5 + 6", Plus (Times (Const 10.0, Const 5.0), Const 6.0));
+      ("10 / 5 + 6", Plus (Div (Const 10.0, Const 5.0), Const 6.0));
+      ("10 * 5 / 2", Div (Times (Const 10.0, Const 5.0), Const 2.0));
     ]
     "parse simple operations"
     (fun (inp, exp) -> assert_exp (Hm2.parse_eq inp) exp)
