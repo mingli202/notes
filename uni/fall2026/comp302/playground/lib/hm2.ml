@@ -120,39 +120,49 @@ let parse_number (s : string) (i : int) : exp * int =
 
 type op = TimesOp | DivOpt
 
-(** handles the times and divisions. these two operations have a higher priority
-    than plus and minus, we want to evaluate the longest string of times/div or
-    higher first before returning to the original parse_eq_acc so that we can
-    ensure the higher priority operations get computed first
+(** parses the string of equation while carrying the previous expression
+
+    [parse_times_and_div] handles the times and divisions. these two operations
+    have a higher priority than plus and minus, we want to evaluate the longest
+    string of times/div or higher first before returning to the original
+    parse_eq_acc so that we can ensure the higher priority operations get
+    computed first
 
     Example:
     {[
     (* Div (Const 4, Times (Const 1, Const 2)) 10 *)
     parse_times_and_div "1 * 2 / 4 + 1"
     ]} *)
-let rec parse_times_and_div (s : string) (i : int) (prev : exp option) (op : op)
-    : exp * int =
-  if String.length s = 0 then raise (Invalid_exp "empty exp")
-  else if i >= String.length s then (Option.get prev, i)
-  else
-    match s.[i] with
-    | '0' .. '9' | '.' ->
-        let e, rest_i = parse_number s i in
-        let op_exp =
-          match op with
-          | TimesOp -> Times (Option.get prev, e)
-          | DivOpt -> Div (Option.get prev, e)
-        in
-        parse_times_and_div s rest_i (Some op_exp) op
-    | '(' -> (Var, i)
-    | ')' -> (Var, i)
-    | '*' -> parse_times_and_div s (i + 1) prev TimesOp
-    | '/' -> parse_times_and_div s (i + 1) prev DivOpt
-    | ' ' -> parse_times_and_div s (i + 1) prev op
-    | _ -> (Option.get prev, i)
-
-(** parses the string of equation while carrying the previous expression *)
 let rec parse_eq_acc (s : string) (i : int) (prev : exp option) : exp * int =
+  let rec parse_times_and_div (s : string) (i : int) (prev : exp option)
+      (op : op) : exp * int =
+    if String.length s = 0 then raise (Invalid_exp "empty exp")
+    else if i >= String.length s then (Option.get prev, i)
+    else
+      match s.[i] with
+      | '0' .. '9' | '.' ->
+          let e, rest_i = parse_number s i in
+          let op_exp =
+            match op with
+            | TimesOp -> Times (Option.get prev, e)
+            | DivOpt -> Div (Option.get prev, e)
+          in
+          parse_times_and_div s rest_i (Some op_exp) op
+      | '(' ->
+          let e, rest_i = parse_eq_acc s (i + 1) None in
+          let op_exp =
+            match op with
+            | TimesOp -> Times (Option.get prev, e)
+            | DivOpt -> Div (Option.get prev, e)
+          in
+          parse_times_and_div s rest_i (Some op_exp) op
+      | ')' -> (Option.get prev, i + 1)
+      | '*' -> parse_times_and_div s (i + 1) prev TimesOp
+      | '/' -> parse_times_and_div s (i + 1) prev DivOpt
+      | ' ' -> parse_times_and_div s (i + 1) prev op
+      | _ -> (Option.get prev, i)
+  in
+
   if String.length s = 0 then raise (Invalid_exp "empty exp")
   else if i >= String.length s then (Option.get prev, i)
   else
@@ -163,7 +173,7 @@ let rec parse_eq_acc (s : string) (i : int) (prev : exp option) : exp * int =
     | '(' ->
         let e, rest_i = parse_eq_acc s (i + 1) None in
         parse_eq_acc s rest_i (Some e)
-    | ')' -> (Option.get prev, i)
+    | ')' -> (Option.get prev, i + 1)
     | 'x' -> (Var, i)
     | '*' ->
         let e, rest_i = parse_times_and_div s i prev TimesOp in
@@ -171,12 +181,12 @@ let rec parse_eq_acc (s : string) (i : int) (prev : exp option) : exp * int =
     | '/' ->
         let e, rest_i = parse_times_and_div s i prev DivOpt in
         parse_eq_acc s rest_i (Some e)
-    | '+' -> (Plus (Option.get prev, fst (parse_eq_acc s (i + 1) None)), i)
+    | '+' ->
+        let e, rest_i = parse_eq_acc s (i + 1) None in
+        (Plus (Option.get prev, e), rest_i)
     | '-' ->
-        ( Plus
-            ( Option.get prev,
-              Times (Const (-1.0), fst (parse_eq_acc s (i + 1) None)) ),
-          i )
+        let e, rest_i = parse_eq_acc s (i + 1) None in
+        (Plus (Option.get prev, Times (Const (-1.0), e)), rest_i)
     | ' ' -> parse_eq_acc s (i + 1) prev
     | c -> raise (Invalid_token (Printf.sprintf "unknown token %c" c))
 

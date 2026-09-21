@@ -67,4 +67,15 @@ let run =
             Times (Const (-1.0), Div (Const 4.0, Const 2.0)) ) );
     ]
     "parse simple operations"
+    (fun (inp, exp) -> assert_exp (Hm2.parse_eq inp) exp);
+
+  Test.test_list
+    [
+      ("(10 + 5) * 2", Times (Plus (Const 10.0, Const 5.0), Const 2.0));
+      ( "(10 - 5) * 2",
+        Times (Plus (Const 10.0, Times (Const (-1.0), Const 5.0)), Const 2.0) );
+      ("(10 / 5) * 2", Times (Div (Const 10.0, Const 5.0), Const 2.0));
+      ("(10 * (5 / 2)", Times (Const 10.0, Div (Const 5.0, Const 2.0)));
+    ]
+    "parse simple parenthesis"
     (fun (inp, exp) -> assert_exp (Hm2.parse_eq inp) exp)
