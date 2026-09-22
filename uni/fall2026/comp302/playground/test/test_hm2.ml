@@ -85,6 +85,14 @@ let run =
     (fun (inp, exp) -> assert_exp (Hm2.parse_eq inp) exp);
 
   Test.test_list
-    [ ("x", Var); ("10 * x", Times (Const 10.0, Var)) ]
+    [
+      ("x", Var);
+      ("10 * x", Times (Const 10.0, Var));
+      ("10 * x * 90", Times (Times (Const 10.0, Var), Const 90.0));
+    ]
     "parse variable"
-    (fun (inp, exp) -> assert_exp (Hm2.parse_eq inp) exp)
+    (fun (inp, exp) -> assert_exp (Hm2.parse_eq inp) exp);
+
+  Test.test_list [ "10 * (x + 5)"; "10 * (x + 5" ] "parse 10 * (x + 5)"
+    (fun inp ->
+      assert_exp (Hm2.parse_eq inp) (Times (Const 10.0, Plus (Var, Const 5.0))))

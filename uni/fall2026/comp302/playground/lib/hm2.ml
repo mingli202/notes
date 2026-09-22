@@ -217,12 +217,13 @@ let rec parse_eq_acc (s : string) (i : int) (prev : exp option) : exp * int =
     parse_eq "10x";
 
     (* Plus (Times (Const 10, Var), Const 5) *)
-    parse_eq "10x + 5";
+    parse_eq "10 * x + 5";
 
     (* Plus (Times (Const 10, Var), Const 5) *)
-    parse_eq "10(x + 5)";
-    parse_eq "10(x + 5";
     parse_eq "10 * (x + 5)";
+    parse_eq "10 * (x + 5";
+
+    (* it will not collapse 2 + 8 since *)
     parse_eq "(2 + 8) * (x + 5)";
     parse_eq "(2 * 5) * (x + 5)"
     ]} *)
