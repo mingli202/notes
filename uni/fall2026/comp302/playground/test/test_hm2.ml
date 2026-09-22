@@ -95,4 +95,25 @@ let run =
 
   Test.test_list [ "10 * (x + 5)"; "10 * (x + 5" ] "parse 10 * (x + 5)"
     (fun inp ->
-      assert_exp (Hm2.parse_eq inp) (Times (Const 10.0, Plus (Var, Const 5.0))))
+      assert_exp (Hm2.parse_eq inp) (Times (Const 10.0, Plus (Var, Const 5.0))));
+
+  Test.test_list
+    [
+      ("-1", Times (Const (-1.0), Const 1.0));
+      ("-(1 + 2)", Times (Const (-1.0), Plus (Const 1.0, Const 2.0)));
+      ( "-(1 + -2)",
+        Times (Const (-1.0), Plus (Const 1.0, Times (Const (-1.0), Const 2.0)))
+      );
+      ( "-1 + -2)",
+        Plus (Times (Const (-1.0), Const 1.0), Times (Const (-1.0), Const 2.0))
+      );
+      ( "-1 - -2)",
+        Plus
+          ( Times (Const (-1.0), Const 1.0),
+            Times (Const (-1.0), Times (Const (-1.0), Const 2.0)) ) );
+    ]
+    "first negative"
+    (fun (inp, exp) -> assert_exp (Hm2.parse_eq inp) exp);
+
+  Test.test_list Hm2.q2a_neg_tests "test neg" (fun (inp, exp) ->
+      assert_exp (Hm2.q2a_neg inp) exp)

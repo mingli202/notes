@@ -191,14 +191,27 @@ let rec parse_eq_acc (s : string) (i : int) (prev : exp option) : exp * int =
     | '+' ->
         let e, rest_i = parse_eq_acc s (i + 1) None in
         (Plus (Option.get prev, e), rest_i)
-    | '-' ->
-        let e, rest_i = parse_eq_acc s (i + 1) None in
-        (Plus (Option.get prev, Times (Const (-1.0), e)), rest_i)
+    | '-' -> (
+        match prev with
+        | None ->
+            let e, rest_i =
+              parse_times_and_div s (i + 1) (Some (Const (-1.0))) TimesOp
+            in
+            parse_eq_acc s rest_i (Some e)
+        | Some prev_e ->
+            let e, rest_i = parse_eq_acc s (i + 1) None in
+            (Plus (prev_e, Times (Const (-1.0), e)), rest_i))
     | ' ' -> parse_eq_acc s (i + 1) prev
     | c -> raise (Invalid_token (Printf.sprintf "unknown token %c" c))
 
 (** parse the equation string into an exp so I can feed it to tests without
-    having to write out the chain of exp
+    having to write out the chain of exp. also, multiplications and divisions
+    are grouped from left to right. however, additions and substractions are
+    grouped from right to left since substractions gets converted into addition
+    of (-1 * exp), there is no need to group as the order doesn't matter.
+
+    All of these cases are happy path, I don't really want to spend time
+    detecting every edge cases and wrong inputs.
 
     Example:
     {[
@@ -229,17 +242,26 @@ let rec parse_eq_acc (s : string) (i : int) (prev : exp option) : exp * int =
     ]} *)
 let parse_eq (s : string) : exp = fst (parse_eq_acc s 0 None)
 
-(** negate the given expression e, but don't resolve the parathensis
+let q2a_neg_tests =
+  List.map
+    (fun (a, b) -> (parse_eq a, parse_eq b))
+    [
+      ("1", "-1");
+      ("2 * x + 1", "-(2 * x + 1)");
+      ("3 * x - 2 - (5 * x + 1)", "-(3 * x - 2 - (5 * x + 1))");
+    ]
+
+(** negate the given expression e, but don't resolve the parathensis.
 
     Example:
 
     {[
-    q2a_neg 1 (* -(1) *);
-    q2a_neg (2x + 1) (* 2x + 1 *);
-    q2a_neg (3x - 2 - 5 (x + 1))
-    (* -(3x - 2 - 5 (x + 1)) *)
+    q2a_neg 1 (* -1 *);
+    q2a_neg ((2 * x) + 1) (* -(2 * x + 1) *);
+    q2a_neg ((3 * x) - 2 - (5 * (x + 1)))
+    (* -(3x - 2 - 5 * (x + 1)) *)
     ]} *)
-let q2a_neg (e : exp) : exp = raise Not_implemented
+let q2a_neg (e : exp) : exp = Times (Const (-1.0), e)
 
 (* TODO: Implement {!q2b_minus}. *)
 let q2b_minus (e1 : exp) (e2 : exp) : exp = raise Not_implemented
