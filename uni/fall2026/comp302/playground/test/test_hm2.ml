@@ -116,4 +116,7 @@ let run =
     (fun (inp, exp) -> assert_exp (Hm2.parse_eq inp) exp);
 
   Test.test_list Hm2.q2a_neg_tests "test neg" (fun (inp, exp) ->
-      assert_exp (Hm2.q2a_neg inp) exp)
+      assert_exp (Hm2.q2a_neg inp) exp);
+
+  Test.test_list Hm2.q2b_minus_tests "test minus" (fun ((inp1, inp2), exp) ->
+      assert_exp (Hm2.q2b_minus inp1 inp2) exp)

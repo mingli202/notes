@@ -263,8 +263,27 @@ let q2a_neg_tests =
     ]} *)
 let q2a_neg (e : exp) : exp = Times (Const (-1.0), e)
 
-(* TODO: Implement {!q2b_minus}. *)
-let q2b_minus (e1 : exp) (e2 : exp) : exp = raise Not_implemented
+let q2b_minus_tests =
+  List.map
+    (fun ((a, b), c) -> ((parse_eq a, parse_eq b), parse_eq c))
+    [
+      (("1", "2"), "1 - 2");
+      (("1", "x"), "1 - x");
+      (("1", "3 * 5"), "1 - (3 * 5)");
+      (("3 * 5", "1"), "(3 * 5) - 1");
+    ]
+
+(** returns the substraction of e2 to e1
+
+    Example:
+
+    {[
+    q2b_minus 1 2 (* 1 - 2 *);
+    q2b_minus 1 x (* 1 - x *);
+    q2b_minus 1 (3 * 5) (* 1 - (3 * 5) *);
+    q2b_minus (3 * 5) 1 (* (3 * 5) - 1 *)
+    ]} *)
+let q2b_minus (e1 : exp) (e2 : exp) : exp = Plus (e1, q2a_neg e2)
 
 (* TODO: Implement {!q2c_pow}. *)
 let q2c_pow (e1 : exp) (p : nat) : exp = raise Not_implemented
