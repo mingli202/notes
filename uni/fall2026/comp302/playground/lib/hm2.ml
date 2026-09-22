@@ -148,6 +148,13 @@ let rec parse_eq_acc (s : string) (i : int) (prev : exp option) : exp * int =
             | DivOpt -> Div (Option.get prev, e)
           in
           parse_times_and_div s rest_i (Some op_exp) op
+      | 'x' ->
+          let op_exp =
+            match op with
+            | TimesOp -> Times (Option.get prev, Var)
+            | DivOpt -> Div (Option.get prev, Var)
+          in
+          parse_times_and_div s (i + 1) (Some op_exp) op
       | '(' ->
           let e, rest_i = parse_eq_acc s (i + 1) None in
           let op_exp =
@@ -174,7 +181,7 @@ let rec parse_eq_acc (s : string) (i : int) (prev : exp option) : exp * int =
         let e, rest_i = parse_eq_acc s (i + 1) None in
         parse_eq_acc s rest_i (Some e)
     | ')' -> (Option.get prev, i + 1)
-    | 'x' -> (Var, i)
+    | 'x' -> parse_eq_acc s (i + 1) (Some Var)
     | '*' ->
         let e, rest_i = parse_times_and_div s i prev TimesOp in
         parse_eq_acc s rest_i (Some e)
