@@ -285,8 +285,25 @@ let q2b_minus_tests =
     ]} *)
 let q2b_minus (e1 : exp) (e2 : exp) : exp = Plus (e1, q2a_neg e2)
 
-(* TODO: Implement {!q2c_pow}. *)
-let q2c_pow (e1 : exp) (p : nat) : exp = raise Not_implemented
+let q2c_pow_tests =
+  List.map
+    (fun ((e, p), exp) -> ((parse_eq e, q1a_nat_of_int p), parse_eq exp))
+    [
+      (("2", 0), "1");
+      (("2", 3), "2 * (2 * (2 * 1))");
+      (("2 + 5", 3), "(2 + 5) * ((2 + 5) * ((2 + 5) * 1))");
+    ]
+
+(** returns e1 p times, right associated
+
+    Example:
+    {[
+    q2c_pow 2 (Z) (* 1 *);
+    q2c_pow 2 (S S S Z) (* 2 * (2 * (2 * 1)) *);
+    q2c_pow (2 + 5) (S S S Z) (* (2 + 5) * ((2 + 5) * ((2 + 5) * 1)) *);
+    ]} *)
+let rec q2c_pow (e1 : exp) (p : nat) : exp =
+  match p with S rest -> Times (e1, q2c_pow e1 rest) | Z -> Const 1.0
 
 (* Question 3 *)
 

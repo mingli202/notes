@@ -119,4 +119,7 @@ let run =
       assert_exp (Hm2.q2a_neg inp) exp);
 
   Test.test_list Hm2.q2b_minus_tests "test minus" (fun ((inp1, inp2), exp) ->
-      assert_exp (Hm2.q2b_minus inp1 inp2) exp)
+      assert_exp (Hm2.q2b_minus inp1 inp2) exp);
+
+  Test.test_list Hm2.q2c_pow_tests "test pow" (fun ((inp1, inp2), exp) ->
+      assert_exp (Hm2.q2c_pow inp1 inp2) exp)
