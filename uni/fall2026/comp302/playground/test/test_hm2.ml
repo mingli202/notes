@@ -122,4 +122,13 @@ let run =
       assert_exp (Hm2.q2b_minus inp1 inp2) exp);
 
   Test.test_list Hm2.q2c_pow_tests "test pow" (fun ((inp1, inp2), exp) ->
-      assert_exp (Hm2.q2c_pow inp1 inp2) exp)
+      assert_exp (Hm2.q2c_pow inp1 inp2) exp);
+
+  Test.test_eq_a "parse pow result"
+    (parse_eq "(2 + 5) * ((2 + 5) * ((2 + 5) * 1))")
+    (Times
+       ( Plus (Const 2.0, Const 5.0),
+         Times
+           ( Plus (Const 2.0, Const 5.0),
+             Times (Plus (Const 2.0, Const 5.0), Const 1.0) ) ))
+    assert_exp
