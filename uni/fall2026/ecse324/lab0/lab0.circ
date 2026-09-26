@@ -68,19 +68,84 @@
       <a name="radix" val="10unsigned"/>
       <a name="width" val="8"/>
     </comp>
-    <comp lib="0" loc="(720,240)" name="Pin">
+    <comp lib="0" loc="(530,340)" name="Splitter">
+      <a name="bit1" val="0"/>
+      <a name="bit2" val="0"/>
+      <a name="bit3" val="0"/>
+      <a name="bit4" val="0"/>
+      <a name="bit5" val="0"/>
+      <a name="bit6" val="0"/>
+      <a name="bit7" val="0"/>
+      <a name="bit8" val="1"/>
+      <a name="facing" val="west"/>
+      <a name="incoming" val="9"/>
+    </comp>
+    <comp lib="0" loc="(750,260)" name="Splitter">
+      <a name="fanout" val="9"/>
+      <a name="incoming" val="9"/>
+    </comp>
+    <comp lib="0" loc="(950,260)" name="Pin">
       <a name="appearance" val="NewPins"/>
       <a name="facing" val="west"/>
       <a name="label" val="Sum"/>
       <a name="output" val="true"/>
       <a name="radix" val="10unsigned"/>
+    </comp>
+    <comp lib="1" loc="(740,260)" name="XOR Gate">
       <a name="width" val="9"/>
     </comp>
+    <comp lib="1" loc="(930,260)" name="NOR Gate">
+      <a name="inputs" val="9"/>
+    </comp>
+    <comp lib="3" loc="(420,380)" name="Adder"/>
     <comp loc="(620,240)" name="add_eight"/>
-    <wire from="(300,240)" to="(400,240)"/>
-    <wire from="(300,280)" to="(400,280)"/>
+    <wire from="(300,240)" to="(330,240)"/>
+    <wire from="(300,280)" to="(350,280)"/>
+    <wire from="(330,240)" to="(330,370)"/>
+    <wire from="(330,240)" to="(400,240)"/>
+    <wire from="(330,370)" to="(380,370)"/>
+    <wire from="(350,280)" to="(350,390)"/>
+    <wire from="(350,280)" to="(400,280)"/>
+    <wire from="(350,390)" to="(380,390)"/>
     <wire from="(400,260)" to="(400,280)"/>
-    <wire from="(620,240)" to="(720,240)"/>
+    <wire from="(400,400)" to="(400,420)"/>
+    <wire from="(400,420)" to="(440,420)"/>
+    <wire from="(420,350)" to="(420,380)"/>
+    <wire from="(420,350)" to="(510,350)"/>
+    <wire from="(440,360)" to="(440,420)"/>
+    <wire from="(440,360)" to="(510,360)"/>
+    <wire from="(530,340)" to="(650,340)"/>
+    <wire from="(620,240)" to="(680,240)"/>
+    <wire from="(650,280)" to="(650,340)"/>
+    <wire from="(650,280)" to="(680,280)"/>
+    <wire from="(740,260)" to="(750,260)"/>
+    <wire from="(770,170)" to="(850,170)"/>
+    <wire from="(770,180)" to="(840,180)"/>
+    <wire from="(770,190)" to="(830,190)"/>
+    <wire from="(770,200)" to="(820,200)"/>
+    <wire from="(770,210)" to="(810,210)"/>
+    <wire from="(770,220)" to="(800,220)"/>
+    <wire from="(770,230)" to="(790,230)"/>
+    <wire from="(770,240)" to="(780,240)"/>
+    <wire from="(770,250)" to="(770,300)"/>
+    <wire from="(770,300)" to="(870,300)"/>
+    <wire from="(780,240)" to="(780,290)"/>
+    <wire from="(780,290)" to="(870,290)"/>
+    <wire from="(790,230)" to="(790,280)"/>
+    <wire from="(790,280)" to="(870,280)"/>
+    <wire from="(800,220)" to="(800,270)"/>
+    <wire from="(800,270)" to="(870,270)"/>
+    <wire from="(810,210)" to="(810,260)"/>
+    <wire from="(810,260)" to="(870,260)"/>
+    <wire from="(820,200)" to="(820,250)"/>
+    <wire from="(820,250)" to="(870,250)"/>
+    <wire from="(830,190)" to="(830,240)"/>
+    <wire from="(830,240)" to="(870,240)"/>
+    <wire from="(840,180)" to="(840,230)"/>
+    <wire from="(840,230)" to="(870,230)"/>
+    <wire from="(850,170)" to="(850,220)"/>
+    <wire from="(850,220)" to="(870,220)"/>
+    <wire from="(930,260)" to="(950,260)"/>
   </circuit>
   <circuit name="add_binary">
     <a name="appearance" val="logisim_evolution"/>
