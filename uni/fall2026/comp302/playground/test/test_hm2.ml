@@ -103,6 +103,38 @@ let run =
 
   Test.test_list
     [
+      ("1", Const 1.0);
+      ("10 + 5", Plus (Const 10.0, Const 5.0));
+      ("10*5", Times (Const 10.0, Const 5.0));
+      ("10 / 5", Div (Const 10.0, Const 5.0));
+      ( "10 + 5 - 6",
+        Plus (Const 10.0, Plus (Const 5.0, Times (Const (-1.0), Const 6.0))) );
+      ("10 + 5 * 6", Plus (Const 10.0, Times (Const 5.0, Const 6.0)));
+      ("10 * 5 + 6", Plus (Times (Const 10.0, Const 5.0), Const 6.0));
+      ("10 / 5 + 6", Plus (Div (Const 10.0, Const 5.0), Const 6.0));
+      ("10 * 5 / 2", Div (Times (Const 10.0, Const 5.0), Const 2.0));
+      ( "1 * 2 / 4 + 1",
+        Plus (Div (Times (Const 1.0, Const 2.0), Const 4.0), Const 1.0) );
+      ( "1 * 2 - 4 / 2",
+        Plus
+          ( Times (Const 1.0, Const 2.0),
+            Times (Const (-1.0), Div (Const 4.0, Const 2.0)) ) );
+      ( "1 * 2 * 5.3 - 4 / 2",
+        Plus
+          ( Times (Times (Const 1.0, Const 2.0), Const 5.3),
+            Times (Const (-1.0), Div (Const 4.0, Const 2.0)) ) );
+      ( "2 * x - x / 3 + 10",
+        Plus
+          ( Plus
+              ( Times (Const 2.0, Var),
+                Times (Const (-1.0), Div (Var, Const 3.0)) ),
+            Const 10.0 ) );
+    ]
+    "parse simple operations with cont"
+    (fun (inp, exp) -> assert_exp (Hm2.parse_eq_cont inp) exp);
+
+  Test.test_list
+    [
       ("(10 + 5) * 2", Times (Plus (Const 10.0, Const 5.0), Const 2.0));
       ( "(10 - 5) * 2",
         Times (Plus (Const 10.0, Times (Const (-1.0), Const 5.0)), Const 2.0) );

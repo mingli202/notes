@@ -267,6 +267,35 @@ let rec parse_eq_acc (s : string) (i : int) (prev : exp option) : exp * int =
     ]} *)
 let parse_eq (s : string) : exp = fst (parse_eq_acc s 0 None)
 
+let parse_eq_cont (s : string) : exp =
+  let rec parse_eq_cont_h (s : string) (i : int) (prev : exp option) ret =
+    if String.length s = 0 then raise (Invalid_exp "empty exp")
+    else if i >= String.length s then Option.get prev
+    else
+      match s.[i] with
+      | '0' .. '9' | '.' ->
+          let e, rest_i = parse_number s i in
+          parse_eq_cont_h s rest_i (Some (ret e)) (fun x -> x)
+      | '(' -> Var
+      | ')' -> Option.get prev
+      | 'x' -> parse_eq_cont_h s (i + 1) (Some (ret Var)) (fun x -> x)
+      | '*' ->
+          parse_eq_cont_h s (i + 1) None (fun a ->
+              ret (Times (Option.get prev, a)))
+      | '/' ->
+          parse_eq_cont_h s (i + 1) None (fun a ->
+              ret (Div (Option.get prev, a)))
+      | '+' ->
+          parse_eq_cont_h s (i + 1) None (fun a ->
+              ret (Plus (Option.get prev, a)))
+      | '-' ->
+          parse_eq_cont_h s (i + 1) None (fun a ->
+              ret (Plus (Option.get prev, Times (Const (-1.0), a))))
+      | ' ' -> parse_eq_cont_h s (i + 1) prev ret
+      | c -> raise (Invalid_token (Printf.sprintf "unknown token %c" c))
+  in
+  parse_eq_cont_h s 0 None (fun x -> x)
+
 let q2a_neg_tests =
   List.map
     (fun (a, b) -> (parse_eq a, parse_eq b))
