@@ -314,8 +314,15 @@ let parse_eq_cont (s : string) : exp =
       | '0' .. '9' | '.' ->
           let e, rest_i = parse_number s i in
           parse_eq_cont_h s rest_i prev_op_type (Some e) prev_fn ret
-      | '(' -> Var
-      | ')' -> Option.get prev
+      | '(' ->
+          parse_eq_cont_h s (i + 1) None None
+            (fun a -> a)
+            (fun a -> ret (prev_fn a))
+      | ')' ->
+          parse_eq_cont_h s (i + 1) prev_op_type
+            (Some (ret (prev_fn (Option.get prev))))
+            (fun a -> a)
+            (fun a -> a)
       | 'x' -> parse_eq_cont_h s (i + 1) prev_op_type (Some Var) prev_fn ret
       | '*' -> handle_op TimesOpType
       | '/' -> handle_op DivOpType

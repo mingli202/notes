@@ -211,7 +211,42 @@ let run_parse_eq_cont =
             Const 10.0 ) );
     ]
     "parse simple operations with cont"
-    (fun (inp, exp) -> assert_exp (Hm2.parse_eq_cont inp) exp)
+    (fun (inp, exp) -> assert_exp (Hm2.parse_eq_cont inp) exp);
+
+  Test.test_list
+    [
+      ("(10 + 5) * 2", Times (Plus (Const 10.0, Const 5.0), Const 2.0));
+      ( "(10 - 5) * 2",
+        Times (Plus (Const 10.0, Times (Const (-1.0), Const 5.0)), Const 2.0) );
+      ( "1 + 2 + 3 + (4 * 2)",
+        Plus
+          ( Plus (Plus (Const 1.0, Const 2.0), Const 3.0),
+            Times (Const 4.0, Const 2.0) ) );
+      ("(10 / 5) * 2", Times (Div (Const 10.0, Const 5.0), Const 2.0));
+      ("(10 * (5 / 2)", Times (Const 10.0, Div (Const 5.0, Const 2.0)));
+      ( "7 * 10 * (5 / 2)",
+        Times (Times (Const 7.0, Const 10.0), Div (Const 5.0, Const 2.0)) );
+      ( "(10 + 5) * (5 / 2)",
+        Times (Plus (Const 10.0, Const 5.0), Div (Const 5.0, Const 2.0)) );
+      ( "10 * (1 + (3 * 4))",
+        Times (Const 10.0, Plus (Const 1.0, Times (Const 3.0, Const 4.0))) );
+    ]
+    "parse parenthesis with cont"
+    (fun (inp, exp) -> assert_exp (Hm2.parse_eq_cont inp) exp);
+
+  Test.test_list
+    [
+      ("x", Var);
+      ("10 * x", Times (Const 10.0, Var));
+      ("10 * x * 90", Times (Times (Const 10.0, Var), Const 90.0));
+    ]
+    "parse variable with cont"
+    (fun (inp, exp) -> assert_exp (Hm2.parse_eq_cont inp) exp);
+
+  Test.test_list [ "10 * (x + 5)"; "10 * (x + 5" ]
+    "parse 10 * (x + 5) with cont" (fun inp ->
+      assert_exp (Hm2.parse_eq_cont inp)
+        (Times (Const 10.0, Plus (Var, Const 5.0))))
 
 let run =
  fun () ->
