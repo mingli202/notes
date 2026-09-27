@@ -303,8 +303,8 @@ let parse_eq_cont (s : string) : exp =
             ret
       | More ->
           parse_eq_cont_h s (i + 1) op_type None
-            (fun a -> a)
             (fun a -> op_from_type op_type (ret (prev_fn (Option.get prev))) a)
+            (fun a -> a)
     in
 
     if String.length s = 0 then raise (Invalid_exp "empty exp")
