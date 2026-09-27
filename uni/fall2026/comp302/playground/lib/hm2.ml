@@ -267,34 +267,64 @@ let rec parse_eq_acc (s : string) (i : int) (prev : exp option) : exp * int =
     ]} *)
 let parse_eq (s : string) : exp = fst (parse_eq_acc s 0 None)
 
+type optType = TimesOpType | DivOpType | MinusOpType | AddOpType | None
+type importance = Less | Equal | More
+
+(** importance of a relative to b *)
+let comp a b =
+  match (a, b) with
+  | (TimesOpType | DivOpType), (AddOpType | MinusOpType) -> More
+  | (AddOpType | MinusOpType), (TimesOpType | DivOpType) -> Less
+  | None, _ -> Less
+  | _ -> Equal
+
+let minus a b = Plus (a, Times (Const (-1.0), b))
+
+let op_from_type op_type a b =
+  match op_type with
+  | TimesOpType -> Times (a, b)
+  | DivOpType -> Div (a, b)
+  | AddOpType -> Plus (a, b)
+  | MinusOpType -> minus a b
+  | _ -> raise (Invalid_argument "no op for this argument")
+
 let parse_eq_cont (s : string) : exp =
-  let rec parse_eq_cont_h (s : string) (i : int) (prev : exp option) ret =
+  let rec parse_eq_cont_h (s : string) (i : int) (prev_op_type : optType)
+      (prev : exp option) prev_fn ret =
+    let handle_op op_type =
+      match comp prev_op_type op_type with
+      | Less ->
+          parse_eq_cont_h s (i + 1) op_type None
+            (fun a -> op_from_type op_type (Option.get prev) a)
+            (fun a -> ret (prev_fn a))
+      | Equal ->
+          parse_eq_cont_h s (i + 1) op_type None
+            (fun a -> op_from_type op_type (prev_fn (Option.get prev)) a)
+            ret
+      | More ->
+          parse_eq_cont_h s (i + 1) op_type None
+            (fun a -> a)
+            (fun a -> op_from_type op_type (ret (prev_fn (Option.get prev))) a)
+    in
+
     if String.length s = 0 then raise (Invalid_exp "empty exp")
-    else if i >= String.length s then Option.get prev
+    else if i >= String.length s then ret (prev_fn (Option.get prev))
     else
       match s.[i] with
       | '0' .. '9' | '.' ->
           let e, rest_i = parse_number s i in
-          parse_eq_cont_h s rest_i (Some (ret e)) (fun x -> x)
+          parse_eq_cont_h s rest_i prev_op_type (Some e) prev_fn ret
       | '(' -> Var
       | ')' -> Option.get prev
-      | 'x' -> parse_eq_cont_h s (i + 1) (Some (ret Var)) (fun x -> x)
-      | '*' ->
-          parse_eq_cont_h s (i + 1) None (fun a ->
-              ret (Times (Option.get prev, a)))
-      | '/' ->
-          parse_eq_cont_h s (i + 1) None (fun a ->
-              ret (Div (Option.get prev, a)))
-      | '+' ->
-          parse_eq_cont_h s (i + 1) None (fun a ->
-              ret (Plus (Option.get prev, a)))
-      | '-' ->
-          parse_eq_cont_h s (i + 1) None (fun a ->
-              ret (Plus (Option.get prev, Times (Const (-1.0), a))))
-      | ' ' -> parse_eq_cont_h s (i + 1) prev ret
+      | 'x' -> parse_eq_cont_h s (i + 1) prev_op_type (Some Var) prev_fn ret
+      | '*' -> handle_op TimesOpType
+      | '/' -> handle_op DivOpType
+      | '+' -> handle_op AddOpType
+      | '-' -> handle_op MinusOpType
+      | ' ' -> parse_eq_cont_h s (i + 1) prev_op_type prev prev_fn ret
       | c -> raise (Invalid_token (Printf.sprintf "unknown token %c" c))
   in
-  parse_eq_cont_h s 0 None (fun x -> x)
+  parse_eq_cont_h s 0 None None (fun x -> x) (fun x -> x)
 
 let q2a_neg_tests =
   List.map

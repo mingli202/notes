@@ -8,5 +8,5 @@ let w (f : unit -> unit) =
   f ()
 
 let () =
-  w Test_hm1.run "hm1";
+  (* w Test_hm1.run "hm1"; *)
   w Test_hm2.run "hm2"

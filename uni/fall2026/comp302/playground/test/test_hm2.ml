@@ -11,7 +11,30 @@ let nat_to_string nat =
 let assert_nat nat1 nat2 = Assert.assert_to_string nat1 nat2 nat_to_string
 let assert_exp e1 e2 = Assert.assert_to_string e1 e2 exp_to_string
 
-let run =
+let run_hm_tests =
+ fun () ->
+  Test.test_list q1a_nat_of_int_tests "int to unary" (fun (inp, exp) ->
+      assert_nat (q1a_nat_of_int inp) exp);
+
+  Test.test_list q1b_int_of_nat_tests "unary to int" (fun (inp, exp) ->
+      Assert.assert_int (q1b_int_of_nat inp) exp);
+
+  Test.test_list q1c_add_tests "unary add" (fun ((in1, in2), exp) ->
+      assert_nat (q1c_add in1 in2) exp);
+
+  Test.test_list Hm2.q2a_neg_tests "test neg" (fun (inp, exp) ->
+      assert_exp (Hm2.q2a_neg inp) exp);
+
+  Test.test_list Hm2.q2b_minus_tests "test minus" (fun ((inp1, inp2), exp) ->
+      assert_exp (Hm2.q2b_minus inp1 inp2) exp);
+
+  Test.test_list Hm2.q2c_pow_tests "test pow" (fun ((inp1, inp2), exp) ->
+      assert_exp (Hm2.q2c_pow inp1 inp2) exp);
+
+  Test.test_list Hm2.eval_tests "test eval" (fun ((inp1, inp2), exp) ->
+      Assert.assert_float (Hm2.eval inp1 inp2) exp)
+
+let run_parse_eq_tests =
  fun () ->
   Test.test_list
     [
@@ -41,15 +64,6 @@ let run =
     ]
     "to_string == to_string_cont"
     (fun i -> Assert.assert_string (exp_to_string i) (exp_to_string_cont i));
-
-  Test.test_list q1a_nat_of_int_tests "int to unary" (fun (inp, exp) ->
-      assert_nat (q1a_nat_of_int inp) exp);
-
-  Test.test_list q1b_int_of_nat_tests "unary to int" (fun (inp, exp) ->
-      Assert.assert_int (q1b_int_of_nat inp) exp);
-
-  Test.test_list q1c_add_tests "unary add" (fun ((in1, in2), exp) ->
-      assert_nat (q1c_add in1 in2) exp);
 
   Test.test_list
     [
@@ -103,38 +117,6 @@ let run =
 
   Test.test_list
     [
-      ("1", Const 1.0);
-      ("10 + 5", Plus (Const 10.0, Const 5.0));
-      ("10*5", Times (Const 10.0, Const 5.0));
-      ("10 / 5", Div (Const 10.0, Const 5.0));
-      ( "10 + 5 - 6",
-        Plus (Const 10.0, Plus (Const 5.0, Times (Const (-1.0), Const 6.0))) );
-      ("10 + 5 * 6", Plus (Const 10.0, Times (Const 5.0, Const 6.0)));
-      ("10 * 5 + 6", Plus (Times (Const 10.0, Const 5.0), Const 6.0));
-      ("10 / 5 + 6", Plus (Div (Const 10.0, Const 5.0), Const 6.0));
-      ("10 * 5 / 2", Div (Times (Const 10.0, Const 5.0), Const 2.0));
-      ( "1 * 2 / 4 + 1",
-        Plus (Div (Times (Const 1.0, Const 2.0), Const 4.0), Const 1.0) );
-      ( "1 * 2 - 4 / 2",
-        Plus
-          ( Times (Const 1.0, Const 2.0),
-            Times (Const (-1.0), Div (Const 4.0, Const 2.0)) ) );
-      ( "1 * 2 * 5.3 - 4 / 2",
-        Plus
-          ( Times (Times (Const 1.0, Const 2.0), Const 5.3),
-            Times (Const (-1.0), Div (Const 4.0, Const 2.0)) ) );
-      ( "2 * x - x / 3 + 10",
-        Plus
-          ( Plus
-              ( Times (Const 2.0, Var),
-                Times (Const (-1.0), Div (Var, Const 3.0)) ),
-            Const 10.0 ) );
-    ]
-    "parse simple operations with cont"
-    (fun (inp, exp) -> assert_exp (Hm2.parse_eq_cont inp) exp);
-
-  Test.test_list
-    [
       ("(10 + 5) * 2", Times (Plus (Const 10.0, Const 5.0), Const 2.0));
       ( "(10 - 5) * 2",
         Times (Plus (Const 10.0, Times (Const (-1.0), Const 5.0)), Const 2.0) );
@@ -179,18 +161,6 @@ let run =
     "first negative"
     (fun (inp, exp) -> assert_exp (Hm2.parse_eq inp) exp);
 
-  Test.test_list Hm2.q2a_neg_tests "test neg" (fun (inp, exp) ->
-      assert_exp (Hm2.q2a_neg inp) exp);
-
-  Test.test_list Hm2.q2b_minus_tests "test minus" (fun ((inp1, inp2), exp) ->
-      assert_exp (Hm2.q2b_minus inp1 inp2) exp);
-
-  Test.test_list Hm2.q2c_pow_tests "test pow" (fun ((inp1, inp2), exp) ->
-      assert_exp (Hm2.q2c_pow inp1 inp2) exp);
-
-  Test.test_list Hm2.eval_tests "test eval" (fun ((inp1, inp2), exp) ->
-      Assert.assert_float (Hm2.eval inp1 inp2) exp);
-
   Test.test_eq_a "parse pow result"
     (parse_eq "(2 + 5) * ((2 + 5) * ((2 + 5) * 1))")
     (Times
@@ -199,3 +169,52 @@ let run =
            ( Plus (Const 2.0, Const 5.0),
              Times (Plus (Const 2.0, Const 5.0), Const 1.0) ) ))
     assert_exp
+
+let run_parse_eq_cont =
+ fun () ->
+  Test.test_list
+    [
+      ("1", Const 1.0);
+      ("10 + 5", Plus (Const 10.0, Const 5.0));
+      ("10 - 5", Plus (Const 10.0, Times (Const (-1.0), Const 5.0)));
+      ("10*5", Times (Const 10.0, Const 5.0));
+      ("10 / 5", Div (Const 10.0, Const 5.0));
+      ("10 + 5 + 6", Plus (Plus (Const 10.0, Const 5.0), Const 6.0));
+      ( "10 + 5 - 6",
+        Plus (Plus (Const 10.0, Const 5.0), Times (Const (-1.0), Const 6.0)) );
+      ("10 + 5 * 6", Plus (Const 10.0, Times (Const 5.0, Const 6.0)));
+      ("10 * 5 + 6", Plus (Times (Const 10.0, Const 5.0), Const 6.0));
+      ("10 / 5 + 6", Plus (Div (Const 10.0, Const 5.0), Const 6.0));
+      ("10 * 5 / 2", Div (Times (Const 10.0, Const 5.0), Const 2.0));
+      ( "1 * 2 + 4 + 3",
+        Plus (Plus (Times (Const 1.0, Const 2.0), Const 4.0), Const 3.0) );
+      ( "1 + 2 / 4 * 3 * 5",
+        Plus
+          ( Const 1.0,
+            Times (Times (Div (Const 2.0, Const 4.0), Const 3.0), Const 5.0) )
+      );
+      ( "1 * 2 / 4 + 1",
+        Plus (Div (Times (Const 1.0, Const 2.0), Const 4.0), Const 1.0) );
+      ( "1 * 2 - 4 / 2",
+        Plus
+          ( Times (Const 1.0, Const 2.0),
+            Times (Const (-1.0), Div (Const 4.0, Const 2.0)) ) );
+      ( "1 * 2 * 5.3 - 4 / 2",
+        Plus
+          ( Times (Times (Const 1.0, Const 2.0), Const 5.3),
+            Times (Const (-1.0), Div (Const 4.0, Const 2.0)) ) );
+      ( "2 * x - x / 3 + 10",
+        Plus
+          ( Plus
+              ( Times (Const 2.0, Var),
+                Times (Const (-1.0), Div (Var, Const 3.0)) ),
+            Const 10.0 ) );
+    ]
+    "parse simple operations with cont"
+    (fun (inp, exp) -> assert_exp (Hm2.parse_eq_cont inp) exp)
+
+let run =
+ fun () ->
+  (* run_hm_tests (); *)
+  (* run_parse_eq_tests (); *)
+  run_parse_eq_cont ()

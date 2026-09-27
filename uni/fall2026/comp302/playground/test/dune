@@ -1,3 +1,4 @@
 (test
  (name test_playground)
+ (modes byte exe)
  (libraries playground))
