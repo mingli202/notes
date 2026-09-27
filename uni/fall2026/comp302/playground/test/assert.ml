@@ -15,3 +15,6 @@ let assert_int a b = assert_to_string a b string_of_int
 
 (** assert the two given float are equal *)
 let assert_float a b = assert_to_string a b string_of_float
+
+(** assert the two given string are equal *)
+let assert_string a b = assert_to_string a b (fun a -> a)

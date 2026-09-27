@@ -6,9 +6,6 @@ exception Invalid_test_case
 (** The exception raised when a test case has an input outside the domain of the
     tested function. *)
 
-exception Invalid_token of string
-exception Invalid_exp of string
-
 type nat = Z | S of nat
 
 type exp =
@@ -20,7 +17,7 @@ type exp =
 
 let rec exp_to_string exp =
   match exp with
-  | Const value -> sprintf "%f" value
+  | Const value -> string_of_float value
   | Var -> "x"
   | Plus (exp1, exp2) ->
       sprintf "(%s + %s)" (exp_to_string exp1) (exp_to_string exp2)
@@ -29,7 +26,27 @@ let rec exp_to_string exp =
   | Div (exp1, exp2) ->
       sprintf "(%s / %s)" (exp_to_string exp1) (exp_to_string exp2)
 
+let exp_to_string_cont exp =
+  let rec exp_to_string_cont_h exp ret =
+    match exp with
+    | Const value -> ret (string_of_float value)
+    | Var -> ret "x"
+    | Plus (exp1, exp2) ->
+        exp_to_string_cont_h exp1 (fun a ->
+            exp_to_string_cont_h exp2 (fun b -> ret (sprintf "(%s + %s)" a b)))
+    | Times (exp1, exp2) ->
+        exp_to_string_cont_h exp1 (fun a ->
+            exp_to_string_cont_h exp2 (fun b -> ret (sprintf "(%s * %s)" a b)))
+    | Div (exp1, exp2) ->
+        exp_to_string_cont_h exp1 (fun a ->
+            exp_to_string_cont_h exp2 (fun b -> ret (sprintf "(%s / %s)" a b)))
+  in
+  exp_to_string_cont_h exp (fun k -> k)
+
 (* Question 1 *)
+
+exception Invalid_token of string
+exception Invalid_exp of string
 
 (** tests for q1a_nat_of_int *)
 let q1a_nat_of_int_tests : (int * nat) list =
@@ -83,12 +100,20 @@ let rec q1c_add (n : nat) (m : nat) : nat =
 
 (* Question 2 *)
 
-(** split the given string into a list of char *)
-let string_split (s : string) : char list =
-  let rec string_split_h (s : string) (i : int) =
-    if i = String.length s then [] else s.[i] :: string_split_h s (i + 1)
-  in
-  string_split_h s 0
+let of_char c =
+  match c with
+  | '0' -> "0"
+  | '1' -> "1"
+  | '2' -> "2"
+  | '3' -> "3"
+  | '4' -> "4"
+  | '5' -> "5"
+  | '6' -> "6"
+  | '7' -> "7"
+  | '8' -> "8"
+  | '9' -> "9"
+  | '.' -> "."
+  | _ -> failwith "Nahhhhhh"
 
 (** Finds a string of numbers and return the rest of the string to parse *)
 let rec find_number (s : string) (i : int) : string * int =
@@ -97,7 +122,7 @@ let rec find_number (s : string) (i : int) : string * int =
     match s.[i] with
     | ('0' .. '9' | '.') as c ->
         let rest_of_n, final_rest = find_number s (i + 1) in
-        (String.of_char c ^ rest_of_n, final_rest)
+        (of_char c ^ rest_of_n, final_rest)
     | _ -> ("", i)
 
 (** finds the number and return the index to the rest of the string to parse
@@ -303,15 +328,32 @@ let q2c_pow_tests =
     q2c_pow (2 + 5) (S S S Z) (* (2 + 5) * ((2 + 5) * ((2 + 5) * 1)) *);
     ]} *)
 let rec q2c_pow (e1 : exp) (p : nat) : exp =
-  match p with S rest -> Times (e1, q2c_pow e1 rest) | Z -> Const 1.0
+  let rec q2c_pow_h (p : nat) (acc : exp) =
+    match p with Z -> acc | S rest -> q2c_pow_h rest (Times (e1, acc))
+  in
+  q2c_pow_h p (Const 1.0)
 
 (* Question 3 *)
 
 (* TODO: Write a good set of tests for {!eval}. *)
-let eval_tests : ((exp * float) * float) list = []
+let eval_tests : ((exp * float) * float) list =
+  List.map
+    (fun ((a, b), c) -> ((parse_eq a, b), c))
+    [
+      (("x", 2.0), 2.0);
+      (("2 * x", 2.0), 4.0);
+      (("2 + 4 * 5", 2.0), 22.0);
+      (("2 * x - x / 3 + 10", 6.0), 20.0);
+    ]
 
-(* TODO: Implement {!eval}. *)
-let rec eval (e : exp) (a : float) : float = raise Not_implemented
+(** evaluate the given expression at the given variable x *)
+let rec eval (e : exp) (x : float) : float =
+  match e with
+  | Var -> x
+  | Const a -> a
+  | Div (a, b) -> eval a x /. eval b x
+  | Times (a, b) -> eval a x *. eval b x
+  | Plus (a, b) -> eval a x +. eval b x
 
 (* Question 4 *)
 

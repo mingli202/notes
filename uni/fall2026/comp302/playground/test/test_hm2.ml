@@ -13,6 +13,35 @@ let assert_exp e1 e2 = Assert.assert_to_string e1 e2 exp_to_string
 
 let run =
  fun () ->
+  Test.test_list
+    [
+      Const 10.0;
+      Times (Const 10.0, Const 20.0);
+      Times (Const 1.0, Plus (Const 2.0, Var));
+      Const 1.0;
+      Plus (Const 10.0, Const 5.0);
+      Times (Const 10.0, Const 5.0);
+      Div (Const 10.0, Const 5.0);
+      Plus (Const 10.0, Plus (Const 5.0, Times (Const (-1.0), Const 6.0)));
+      Plus (Const 10.0, Times (Const 5.0, Const 6.0));
+      Plus (Times (Const 10.0, Const 5.0), Const 6.0);
+      Plus (Div (Const 10.0, Const 5.0), Const 6.0);
+      Div (Times (Const 10.0, Const 5.0), Const 2.0);
+      Plus (Div (Times (Const 1.0, Const 2.0), Const 4.0), Const 1.0);
+      Plus
+        ( Times (Const 1.0, Const 2.0),
+          Times (Const (-1.0), Div (Const 4.0, Const 2.0)) );
+      Plus
+        ( Times (Times (Const 1.0, Const 2.0), Const 5.3),
+          Times (Const (-1.0), Div (Const 4.0, Const 2.0)) );
+      Plus
+        ( Plus
+            (Times (Const 2.0, Var), Times (Const (-1.0), Div (Var, Const 3.0))),
+          Const 10.0 );
+    ]
+    "to_string == to_string_cont"
+    (fun i -> Assert.assert_string (exp_to_string i) (exp_to_string_cont i));
+
   Test.test_list q1a_nat_of_int_tests "int to unary" (fun (inp, exp) ->
       assert_nat (q1a_nat_of_int inp) exp);
 
@@ -21,9 +50,6 @@ let run =
 
   Test.test_list q1c_add_tests "unary add" (fun ((in1, in2), exp) ->
       assert_nat (q1c_add in1 in2) exp);
-
-  Test.test_eq "string_split" (string_split "23 .40*")
-    [ '2'; '3'; ' '; '.'; '4'; '0'; '*' ];
 
   Test.test_list
     [
@@ -65,6 +91,12 @@ let run =
         Plus
           ( Times (Times (Const 1.0, Const 2.0), Const 5.3),
             Times (Const (-1.0), Div (Const 4.0, Const 2.0)) ) );
+      ( "2 * x - x / 3 + 10",
+        Plus
+          ( Plus
+              ( Times (Const 2.0, Var),
+                Times (Const (-1.0), Div (Var, Const 3.0)) ),
+            Const 10.0 ) );
     ]
     "parse simple operations"
     (fun (inp, exp) -> assert_exp (Hm2.parse_eq inp) exp);
@@ -123,6 +155,9 @@ let run =
 
   Test.test_list Hm2.q2c_pow_tests "test pow" (fun ((inp1, inp2), exp) ->
       assert_exp (Hm2.q2c_pow inp1 inp2) exp);
+
+  Test.test_list Hm2.eval_tests "test eval" (fun ((inp1, inp2), exp) ->
+      Assert.assert_float (Hm2.eval inp1 inp2) exp);
 
   Test.test_eq_a "parse pow result"
     (parse_eq "(2 + 5) * ((2 + 5) * ((2 + 5) * 1))")
