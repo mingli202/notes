@@ -210,11 +210,24 @@ let op_from_type op_type (a : exp option) b =
       end
 
 (** parse the equation string into an exp so I can feed it to tests without
-    having to write out the chain of exp. operations are grouped from left to
-    right
+    having to write out the chain of exp. Usual precedence applies
+    (unary [-] > [^] > [*] [/] > [+] [-]); operators of equal precedence are
+    grouped from left to right.
+
+    Desugaring (matches the shapes the assignment expects):
+    - [a - b] becomes [Plus (a, Times (Const (-1.), b))]
+    - a leading [-e] becomes [Times (Const (-1.), e)], so ["-1"] is
+      [Times (Const (-1.), Const 1.)], not [Const (-1.)]
+    - [a ^ n] becomes [a * (a * ... (a * 1))]; [n] must be a constant and is
+      truncated to an int (["2 ^ 2.5"] is ["2 ^ 2"]), otherwise raises
+      [Invalid_exp]
 
     All of these cases are happy path, I don't really want to spend time
-    detecting every edge cases and wrong inputs.
+    detecting every edge cases and wrong inputs. Malformed input is not
+    rejected and silently loses terms:
+    - implicit multiplication is not supported: ["10x"] parses as [Var]
+    - an unclosed parenthesis drops what came before it: ["10 * (x + 5"]
+      parses as [Plus (Var, Const 5.)]
 
     Example:
     {[
@@ -232,8 +245,11 @@ let op_from_type op_type (a : exp option) b =
     (* Plus (Times (Const 10, Var), Const 5) *)
     parse_eq "10 * x + 5";
 
-    (* Plus (Times (Const 10, Var), Const 5) *)
+    (* Times (Const 10, Plus (Var, Const 5)) *)
     parse_eq "10 * (x + 5)";
+
+    (* Plus (Plus (Const 1, Times (Const -1, Const 2)), Times (Const -1, Const 3)) *)
+    parse_eq "1 - 2 - 3";
 
     (* it will not collapse 2 + 8 *)
     parse_eq "(2 + 8) * (x + 5)";
