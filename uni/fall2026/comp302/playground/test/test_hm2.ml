@@ -32,7 +32,10 @@ let run_hm_tests =
       assert_exp (Hm2.q2c_pow inp1 inp2) exp);
 
   Test.test_list Hm2.eval_tests "test eval" (fun ((inp1, inp2), exp) ->
-      Assert.assert_float (Hm2.eval inp1 inp2) exp)
+      Assert.assert_float (Hm2.eval inp1 inp2) exp);
+
+  Test.test_list Hm2.diff_tests "test diff" (fun (inp1, exp) ->
+      assert_exp (Hm2.diff inp1) exp)
 
 let run_parse_eq_cont =
  fun () ->
@@ -157,6 +160,5 @@ let run_parse_eq_cont =
 
 let run =
  fun () ->
-  (* run_hm_tests (); *)
-  (* run_parse_eq_tests (); *)
-  run_parse_eq_cont ()
+  run_parse_eq_cont ();
+  run_hm_tests ()

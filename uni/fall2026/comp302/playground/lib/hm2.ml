@@ -175,6 +175,9 @@ let comp a b =
   match (a, b) with None, _ -> Less | aa, bb -> importance_fn aa bb
 
 let minus a b = Plus (a, Times (Const (-1.0), b))
+let add a b = Plus (a, b)
+let times a b = Times (a, b)
+let div a b = Div (a, b)
 
 let pow base x =
   let rec pow_h base x acc =
@@ -360,7 +363,7 @@ let rec q2c_pow (e1 : exp) (p : nat) : exp =
 
 (* Question 3 *)
 
-(* TODO: Write a good set of tests for {!eval}. *)
+(** tests for eval *)
 let eval_tests : ((exp * float) * float) list =
   List.map
     (fun ((a, b), c) -> ((parse_eq a, b), c))
@@ -372,18 +375,43 @@ let eval_tests : ((exp * float) * float) list =
     ]
 
 (** evaluate the given expression at the given variable x *)
-let rec eval (e : exp) (x : float) : float =
-  match e with
-  | Var -> x
-  | Const a -> a
-  | Div (a, b) -> eval a x /. eval b x
-  | Times (a, b) -> eval a x *. eval b x
-  | Plus (a, b) -> eval a x +. eval b x
+let eval (e : exp) (x : float) : float =
+  let rec eval_h (e : exp) (x : float) cont =
+    match e with
+    | Var -> cont x
+    | Const l -> cont l
+    | Div (l, r) -> eval_h l x (fun a -> cont (eval_h r x (fun b -> a /. b)))
+    | Times (l, r) -> eval_h l x (fun a -> cont (eval_h r x (fun b -> a *. b)))
+    | Plus (l, r) -> eval_h l x (fun a -> cont (eval_h r x (fun b -> a +. b)))
+  in
+  eval_h e x (fun a -> a)
 
 (* Question 4 *)
 
 (* TODO: Write a good set of tests for {!diff_tests}. *)
-let diff_tests : (exp * exp) list = []
+let diff_tests : (exp * exp) list =
+  List.map
+    (fun (a, b) -> (parse_eq a, parse_eq b))
+    [
+      ("2", "0"); ("2 * x", "0 * x + 2 * 1"); ("2 * x + 3", "0 * x + 2 * 1 + 0");
+    ]
 
-(* TODO: Implement {!diff}. *)
-let rec diff (e : exp) : exp = raise Not_implemented
+(** computes the derivative of the given expression e *)
+let rec diff (e : exp) : exp =
+  let rec diff_h (e : exp) cont =
+    match e with
+    | Var -> cont (Const 1.0)
+    | Const l -> cont (Const 0.0)
+    | Div (l, r) ->
+        diff_h l (fun a ->
+            diff_h r (fun b ->
+                cont
+                  (Div
+                     ( Plus (Times (a, r), Times (Const (-1.0), Times (l, b))),
+                       Times (r, r) ))))
+    | Times (l, r) ->
+        diff_h l (fun a ->
+            diff_h r (fun b -> cont (Plus (Times (a, r), Times (l, b)))))
+    | Plus (l, r) -> diff_h l (fun a -> diff_h r (fun b -> cont (Plus (a, b))))
+  in
+  diff_h e (fun a -> a)
