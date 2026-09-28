@@ -143,97 +143,61 @@ let parse_number (s : string) (i : int) : exp * int =
       (Invalid_exp
          (Printf.sprintf "the number found could not be parsed: %s" str_n))
 
-type op = TimesOp | DivOpt
+type optType =
+  | NegationOpType
+  | TimesOpType
+  | DivOpType
+  | MinusOpType
+  | AddOpType
+  | None
 
-(** parses the string of equation while carrying the previous expression
+type importance = Less | Equal | More
 
-    [parse_times_and_div] handles the times and divisions. these two operations
-    have a higher priority than plus and minus, we want to evaluate the longest
-    string of times/div or higher first before returning to the original
-    parse_eq_acc so that we can ensure the higher priority operations get
-    computed first
+let priority op_type =
+  match op_type with
+  | NegationOpType -> 3
+  | TimesOpType -> 2
+  | DivOpType -> 2
+  | AddOpType -> 1
+  | MinusOpType -> 1
+  | None -> 0
 
-    Example:
-    {[
-    (* Div (Const 4, Times (Const 1, Const 2)) 10 *)
-    parse_times_and_div "1 * 2 / 4 + 1"
-    ]} *)
-let rec parse_eq_acc (s : string) (i : int) (prev : exp option) : exp * int =
-  let rec parse_times_and_div (s : string) (i : int) (prev : exp option)
-      (op : op) : exp * int =
-    if String.length s = 0 then raise (Invalid_exp "empty exp")
-    else if i >= String.length s then (Option.get prev, i)
-    else
-      match s.[i] with
-      | '0' .. '9' | '.' ->
-          let e, rest_i = parse_number s i in
-          let op_exp =
-            match op with
-            | TimesOp -> Times (Option.get prev, e)
-            | DivOpt -> Div (Option.get prev, e)
-          in
-          parse_times_and_div s rest_i (Some op_exp) op
-      | 'x' ->
-          let op_exp =
-            match op with
-            | TimesOp -> Times (Option.get prev, Var)
-            | DivOpt -> Div (Option.get prev, Var)
-          in
-          parse_times_and_div s (i + 1) (Some op_exp) op
-      | '(' ->
-          let e, rest_i = parse_eq_acc s (i + 1) None in
-          let op_exp =
-            match op with
-            | TimesOp -> Times (Option.get prev, e)
-            | DivOpt -> Div (Option.get prev, e)
-          in
-          parse_times_and_div s rest_i (Some op_exp) op
-      | ')' -> (Option.get prev, i + 1)
-      | '*' -> parse_times_and_div s (i + 1) prev TimesOp
-      | '/' -> parse_times_and_div s (i + 1) prev DivOpt
-      | ' ' -> parse_times_and_div s (i + 1) prev op
-      | _ -> (Option.get prev, i)
-  in
+let importance_fn a b =
+  match priority a - priority b with
+  | n when n < 0 -> Less
+  | n when n > 0 -> More
+  | _ -> Equal
 
-  if String.length s = 0 then raise (Invalid_exp "empty exp")
-  else if i >= String.length s then (Option.get prev, i)
-  else
-    match s.[i] with
-    | '0' .. '9' | '.' ->
-        let e, rest_i = parse_number s i in
-        parse_eq_acc s rest_i (Some e)
-    | '(' ->
-        let e, rest_i = parse_eq_acc s (i + 1) None in
-        parse_eq_acc s rest_i (Some e)
-    | ')' -> (Option.get prev, i + 1)
-    | 'x' -> parse_eq_acc s (i + 1) (Some Var)
-    | '*' ->
-        let e, rest_i = parse_times_and_div s i prev TimesOp in
-        parse_eq_acc s rest_i (Some e)
-    | '/' ->
-        let e, rest_i = parse_times_and_div s i prev DivOpt in
-        parse_eq_acc s rest_i (Some e)
-    | '+' ->
-        let e, rest_i = parse_eq_acc s (i + 1) None in
-        (Plus (Option.get prev, e), rest_i)
-    | '-' -> (
-        match prev with
-        | None ->
-            let e, rest_i =
-              parse_times_and_div s (i + 1) (Some (Const (-1.0))) TimesOp
-            in
-            parse_eq_acc s rest_i (Some e)
-        | Some prev_e ->
-            let e, rest_i = parse_eq_acc s (i + 1) None in
-            (Plus (prev_e, Times (Const (-1.0), e)), rest_i))
-    | ' ' -> parse_eq_acc s (i + 1) prev
-    | c -> raise (Invalid_token (Printf.sprintf "unknown token %c" c))
+(** importance of a relative to b *)
+let comp a b =
+  match (a, b) with None, _ -> Less | aa, bb -> importance_fn aa bb
+
+let minus a b = Plus (a, Times (Const (-1.0), b))
+
+let op_from_type op_type (a : exp option) b =
+  match a with
+  | None ->
+      begin match op_type with
+      | NegationOpType -> Times (Const (-1.0), b)
+      | _ ->
+          raise (Invalid_argument "did not expect to not have a previous exp")
+      end
+  | Some a ->
+      begin match op_type with
+      | NegationOpType ->
+          raise
+            (Invalid_argument
+               "negation should not have a previous expression to compute")
+      | TimesOpType -> Times (a, b)
+      | DivOpType -> Div (a, b)
+      | AddOpType -> Plus (a, b)
+      | MinusOpType -> minus a b
+      | None -> raise (Invalid_argument "no op for this argument")
+      end
 
 (** parse the equation string into an exp so I can feed it to tests without
-    having to write out the chain of exp. also, multiplications and divisions
-    are grouped from left to right. however, additions and substractions are
-    grouped from right to left since substractions gets converted into addition
-    of (-1 * exp), there is no need to group as the order doesn't matter.
+    having to write out the chain of exp. operations are grouped from left to
+    right
 
     All of these cases are happy path, I don't really want to spend time
     detecting every edge cases and wrong inputs.
@@ -261,49 +225,25 @@ let rec parse_eq_acc (s : string) (i : int) (prev : exp option) : exp * int =
     parse_eq "10 * (x + 5)";
     parse_eq "10 * (x + 5";
 
-    (* it will not collapse 2 + 8 since *)
+    (* it will not collapse 2 + 8 *)
     parse_eq "(2 + 8) * (x + 5)";
     parse_eq "(2 * 5) * (x + 5)"
     ]} *)
-let parse_eq (s : string) : exp = fst (parse_eq_acc s 0 None)
-
-type optType = TimesOpType | DivOpType | MinusOpType | AddOpType | None
-type importance = Less | Equal | More
-
-(** importance of a relative to b *)
-let comp a b =
-  match (a, b) with
-  | (TimesOpType | DivOpType), (AddOpType | MinusOpType) -> More
-  | (AddOpType | MinusOpType), (TimesOpType | DivOpType) -> Less
-  | None, _ -> Less
-  | _ -> Equal
-
-let minus a b = Plus (a, Times (Const (-1.0), b))
-
-let op_from_type op_type a b =
-  match op_type with
-  | TimesOpType -> Times (a, b)
-  | DivOpType -> Div (a, b)
-  | AddOpType -> Plus (a, b)
-  | MinusOpType -> minus a b
-  | _ -> raise (Invalid_argument "no op for this argument")
-
-let parse_eq_cont (s : string) : exp =
+let parse_eq (s : string) : exp =
   let rec parse_eq_cont_h (s : string) (i : int) (prev_op_type : optType)
       (prev : exp option) prev_fn ret =
     let handle_op op_type =
       match comp prev_op_type op_type with
       | Less ->
-          parse_eq_cont_h s (i + 1) op_type None
-            (fun a -> op_from_type op_type (Option.get prev) a)
+          parse_eq_cont_h s (i + 1) op_type None (op_from_type op_type prev)
             (fun a -> ret (prev_fn a))
       | Equal ->
           parse_eq_cont_h s (i + 1) op_type None
-            (fun a -> op_from_type op_type (prev_fn (Option.get prev)) a)
+            (op_from_type op_type (Some (prev_fn (Option.get prev))))
             ret
       | More ->
           parse_eq_cont_h s (i + 1) op_type None
-            (fun a -> op_from_type op_type (ret (prev_fn (Option.get prev))) a)
+            (op_from_type op_type (Some (ret (prev_fn (Option.get prev)))))
             (fun a -> a)
     in
 
@@ -327,7 +267,9 @@ let parse_eq_cont (s : string) : exp =
       | '*' -> handle_op TimesOpType
       | '/' -> handle_op DivOpType
       | '+' -> handle_op AddOpType
-      | '-' -> handle_op MinusOpType
+      | '-' ->
+          if prev = None then handle_op NegationOpType
+          else handle_op MinusOpType
       | ' ' -> parse_eq_cont_h s (i + 1) prev_op_type prev prev_fn ret
       | c -> raise (Invalid_token (Printf.sprintf "unknown token %c" c))
   in
