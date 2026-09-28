@@ -175,9 +175,6 @@ let comp a b =
   match (a, b) with None, _ -> Less | aa, bb -> importance_fn aa bb
 
 let minus a b = Plus (a, Times (Const (-1.0), b))
-let add a b = Plus (a, b)
-let times a b = Times (a, b)
-let div a b = Div (a, b)
 
 let pow base x =
   let rec pow_h base x acc =
