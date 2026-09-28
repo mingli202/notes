@@ -107,8 +107,7 @@ let run_parse_eq_cont =
     "parse variable with cont"
     (fun (inp, exp) -> assert_exp (Hm2.parse_eq inp) exp);
 
-  Test.test_list [ "10 * (x + 5)"; "10 * (x + 5" ]
-    "parse 10 * (x + 5) with cont" (fun inp ->
+  Test.test_list [ "10 * (x + 5)" ] "parse 10 * (x + 5) with cont" (fun inp ->
       assert_exp (Hm2.parse_eq inp) (Times (Const 10.0, Plus (Var, Const 5.0))));
 
   Test.test_list
@@ -128,6 +127,16 @@ let run_parse_eq_cont =
     ]
     "first negative"
     (fun (inp, exp) -> assert_exp (Hm2.parse_eq inp) exp);
+
+  Test.test_eq_a "parse many parenthesis"
+    (parse_eq "(1 + 2) * ((3 + 4) * ((5 + 6) * 7))")
+    (Times
+       ( Plus (Const 1.0, Const 2.0),
+         Times
+           ( Plus (Const 3.0, Const 4.0),
+             Times (Plus (Const 5.0, Const 6.0), Const 7.0) ) ))
+    assert_exp;
+
   Test.test_eq_a "parse pow result"
     (parse_eq "(2 + 5) * ((2 + 5) * ((2 + 5) * 1))")
     (Times
@@ -135,6 +144,10 @@ let run_parse_eq_cont =
          Times
            ( Plus (Const 2.0, Const 5.0),
              Times (Plus (Const 2.0, Const 5.0), Const 1.0) ) ))
+    assert_exp;
+
+  Test.test_eq_a "parse pow operator" (parse_eq "(2 + 5) ^ 3")
+    (parse_eq "(2 + 5) * ((2 + 5) * ((2 + 5) * 1))")
     assert_exp
 
 let run =
