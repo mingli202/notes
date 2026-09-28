@@ -146,9 +146,14 @@ let run_parse_eq_cont =
              Times (Plus (Const 2.0, Const 5.0), Const 1.0) ) ))
     assert_exp;
 
-  Test.test_eq_a "parse pow operator" (parse_eq "(2 + 5) ^ 3")
-    (parse_eq "(2 + 5) * ((2 + 5) * ((2 + 5) * 1))")
-    assert_exp
+  Test.test_list
+    [
+      ("2 ^ 4", "2 * (2 * (2 * (2 * 1)))");
+      ("1 * 2 ^ 4 + 4", "(1 * (2 * (2 * (2 * (2 * 1)))) + 4)");
+      ("(2 + 5) ^ 3", "(2 + 5) * ((2 + 5) * ((2 + 5) * 1))");
+    ]
+    "parse pow operator"
+    (fun (inp, exp) -> assert_exp (Hm2.parse_eq inp) (Hm2.parse_eq exp))
 
 let run =
  fun () ->
