@@ -229,15 +229,11 @@ let op_from_type op_type (a : exp option) b =
     (* Const 12.5 *)
     parse_eq "12.5";
 
-    (* Times (Const 10, Var) *)
-    parse_eq "10x";
-
     (* Plus (Times (Const 10, Var), Const 5) *)
     parse_eq "10 * x + 5";
 
     (* Plus (Times (Const 10, Var), Const 5) *)
     parse_eq "10 * (x + 5)";
-    parse_eq "10 * (x + 5";
 
     (* it will not collapse 2 + 8 *)
     parse_eq "(2 + 8) * (x + 5)";
