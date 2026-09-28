@@ -388,12 +388,19 @@ let eval (e : exp) (x : float) : float =
 
 (* Question 4 *)
 
-(* TODO: Write a good set of tests for {!diff_tests}. *)
+(** tests for diff: one case per rule, plus composition *)
 let diff_tests : (exp * exp) list =
   List.map
     (fun (a, b) -> (parse_eq a, parse_eq b))
     [
-      ("2", "0"); ("2 * x", "0 * x + 2 * 1"); ("2 * x + 3", "0 * x + 2 * 1 + 0");
+      ("2", "0");
+      ("x", "1");
+      ("x + 3", "1 + 0");
+      ("x * 2", "1 * 2 + x * 0");
+      ("2 * x + 3", "0 * x + 2 * 1 + 0");
+      ("x * (x + 1)", "1 * (x + 1) + x * (1 + 0)");
+      ("3 - x", "0 + (0 * x - 1)");
+      ("1 / x", "(0 * x - 1 * 1) / (x * x)");
     ]
 
 (** computes the derivative of the given expression e *)
