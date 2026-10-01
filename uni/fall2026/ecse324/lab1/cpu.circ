@@ -147,25 +147,6 @@
       <circ-port dir="out" pin="840,560" x="90" y="360"/>
       <circ-port dir="out" pin="860,900" x="120" y="360"/>
     </appear>
-    <comp lib="0" loc="(150,790)" name="Splitter">
-      <a name="bit1" val="0"/>
-      <a name="bit10" val="0"/>
-      <a name="bit11" val="0"/>
-      <a name="bit12" val="0"/>
-      <a name="bit13" val="0"/>
-      <a name="bit14" val="0"/>
-      <a name="bit15" val="1"/>
-      <a name="bit2" val="0"/>
-      <a name="bit3" val="0"/>
-      <a name="bit4" val="0"/>
-      <a name="bit5" val="0"/>
-      <a name="bit6" val="0"/>
-      <a name="bit7" val="0"/>
-      <a name="bit8" val="0"/>
-      <a name="bit9" val="0"/>
-      <a name="facing" val="south"/>
-      <a name="incoming" val="16"/>
-    </comp>
     <comp lib="0" loc="(160,630)" name="Splitter">
       <a name="bit1" val="0"/>
       <a name="bit10" val="1"/>
@@ -182,6 +163,25 @@
       <a name="bit7" val="1"/>
       <a name="bit8" val="1"/>
       <a name="bit9" val="1"/>
+      <a name="facing" val="south"/>
+      <a name="incoming" val="16"/>
+    </comp>
+    <comp lib="0" loc="(300,800)" name="Splitter">
+      <a name="bit1" val="0"/>
+      <a name="bit10" val="0"/>
+      <a name="bit11" val="0"/>
+      <a name="bit12" val="0"/>
+      <a name="bit13" val="0"/>
+      <a name="bit14" val="0"/>
+      <a name="bit15" val="1"/>
+      <a name="bit2" val="0"/>
+      <a name="bit3" val="0"/>
+      <a name="bit4" val="0"/>
+      <a name="bit5" val="0"/>
+      <a name="bit6" val="0"/>
+      <a name="bit7" val="0"/>
+      <a name="bit8" val="0"/>
+      <a name="bit9" val="0"/>
       <a name="facing" val="south"/>
       <a name="incoming" val="16"/>
     </comp>
@@ -292,10 +292,10 @@
       <a name="facing" val="south"/>
       <a name="incoming" val="16"/>
     </comp>
-    <comp lib="1" loc="(300,510)" name="AND Gate">
+    <comp lib="1" loc="(270,510)" name="AND Gate">
       <a name="width" val="16"/>
     </comp>
-    <comp lib="1" loc="(300,590)" name="OR Gate">
+    <comp lib="1" loc="(270,590)" name="OR Gate">
       <a name="width" val="16"/>
     </comp>
     <comp lib="1" loc="(380,590)" name="NOT Gate">
@@ -323,14 +323,14 @@
     <comp lib="3" loc="(210,400)" name="Negator">
       <a name="width" val="16"/>
     </comp>
-    <comp lib="3" loc="(290,670)" name="Shifter">
+    <comp lib="3" loc="(260,670)" name="Shifter">
       <a name="width" val="16"/>
     </comp>
-    <comp lib="3" loc="(290,720)" name="Shifter">
+    <comp lib="3" loc="(260,720)" name="Shifter">
       <a name="shift" val="lr"/>
       <a name="width" val="16"/>
     </comp>
-    <comp lib="3" loc="(290,770)" name="Shifter">
+    <comp lib="3" loc="(260,770)" name="Shifter">
       <a name="shift" val="ar"/>
       <a name="width" val="16"/>
     </comp>
@@ -347,40 +347,39 @@
     <wire from="(120,320)" to="(120,490)"/>
     <wire from="(120,320)" to="(170,320)"/>
     <wire from="(120,490)" to="(120,570)"/>
-    <wire from="(120,490)" to="(250,490)"/>
+    <wire from="(120,490)" to="(220,490)"/>
     <wire from="(120,570)" to="(120,630)"/>
-    <wire from="(120,570)" to="(250,570)"/>
-    <wire from="(120,630)" to="(120,790)"/>
+    <wire from="(120,570)" to="(220,570)"/>
     <wire from="(120,630)" to="(160,630)"/>
-    <wire from="(120,790)" to="(150,790)"/>
     <wire from="(140,360)" to="(140,400)"/>
     <wire from="(140,360)" to="(250,360)"/>
     <wire from="(140,400)" to="(170,400)"/>
-    <wire from="(160,810)" to="(160,840)"/>
-    <wire from="(160,840)" to="(160,930)"/>
-    <wire from="(160,840)" to="(450,840)"/>
-    <wire from="(160,930)" to="(500,930)"/>
     <wire from="(170,310)" to="(170,320)"/>
     <wire from="(170,310)" to="(320,310)"/>
     <wire from="(180,650)" to="(180,680)"/>
     <wire from="(180,680)" to="(180,730)"/>
-    <wire from="(180,680)" to="(250,680)"/>
+    <wire from="(180,680)" to="(220,680)"/>
     <wire from="(180,730)" to="(180,780)"/>
-    <wire from="(180,730)" to="(250,730)"/>
-    <wire from="(180,780)" to="(250,780)"/>
+    <wire from="(180,730)" to="(220,730)"/>
+    <wire from="(180,780)" to="(220,780)"/>
     <wire from="(210,400)" to="(220,400)"/>
     <wire from="(220,380)" to="(220,400)"/>
     <wire from="(220,380)" to="(250,380)"/>
     <wire from="(260,130)" to="(260,350)"/>
     <wire from="(260,130)" to="(610,130)"/>
+    <wire from="(260,670)" to="(490,670)"/>
+    <wire from="(260,720)" to="(510,720)"/>
+    <wire from="(260,770)" to="(530,770)"/>
+    <wire from="(270,510)" to="(330,510)"/>
+    <wire from="(270,590)" to="(340,590)"/>
     <wire from="(280,370)" to="(300,370)"/>
-    <wire from="(290,670)" to="(490,670)"/>
-    <wire from="(290,720)" to="(510,720)"/>
-    <wire from="(290,770)" to="(530,770)"/>
     <wire from="(300,330)" to="(300,370)"/>
     <wire from="(300,330)" to="(320,330)"/>
-    <wire from="(300,510)" to="(330,510)"/>
-    <wire from="(300,590)" to="(340,590)"/>
+    <wire from="(300,370)" to="(300,800)"/>
+    <wire from="(310,820)" to="(310,840)"/>
+    <wire from="(310,840)" to="(310,930)"/>
+    <wire from="(310,840)" to="(450,840)"/>
+    <wire from="(310,930)" to="(500,930)"/>
     <wire from="(330,420)" to="(330,510)"/>
     <wire from="(330,420)" to="(550,420)"/>
     <wire from="(340,270)" to="(340,300)"/>
@@ -447,15 +446,15 @@
     <wire from="(830,560)" to="(840,560)"/>
     <wire from="(90,360)" to="(140,360)"/>
     <wire from="(90,360)" to="(90,530)"/>
-    <wire from="(90,530)" to="(250,530)"/>
+    <wire from="(90,530)" to="(220,530)"/>
     <wire from="(90,530)" to="(90,610)"/>
-    <wire from="(90,610)" to="(250,610)"/>
+    <wire from="(90,610)" to="(220,610)"/>
     <wire from="(90,610)" to="(90,660)"/>
-    <wire from="(90,660)" to="(250,660)"/>
+    <wire from="(90,660)" to="(220,660)"/>
     <wire from="(90,660)" to="(90,710)"/>
-    <wire from="(90,710)" to="(250,710)"/>
+    <wire from="(90,710)" to="(220,710)"/>
     <wire from="(90,710)" to="(90,760)"/>
-    <wire from="(90,760)" to="(250,760)"/>
+    <wire from="(90,760)" to="(220,760)"/>
     <wire from="(90,760)" to="(90,800)"/>
   </circuit>
   <circuit name="RegisterFile">
