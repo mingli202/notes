@@ -9,4 +9,5 @@ let w (f : unit -> unit) =
 
 let () =
   (* w Test_hm1.run "hm1"; *)
-  w Test_hm2.run "hm2"
+  (* w Test_hm2.run "hm2"; *)
+  w Test_hm3.run "hm3"
