@@ -11,13 +11,13 @@ type 'b church = ('b -> 'b) -> 'b -> 'b
 
 let zero : 'b church = fun s z -> z
 let one : 'b church = fun s z -> s z
-let two : 'b church = fun s z -> s (s z)
 
 (* Hi everyone. All of these problems are generally "one-liners" and have slick solutions. They're quite cute to think
    about but are certainly confusing without the appropriate time and experience that you devote towards reasoning about
    this style. Good luck! :-) *)
 
 (* For example, if you wanted to use the encoding of five in your test cases, you could define: *)
+let two : 'b church = fun s z -> s (s z)
 let five : 'b church = fun s z -> s (s (s (s (s z))))
 (* and use 'five' like a constant. You could also just use
    'fun z s -> s (s (s (s (s z))))' directly in the test cases too. *)
@@ -103,8 +103,9 @@ let mult (n1 : 'b church) (n2 : 'b church) : 'b church =
 (** test cases for int_pow_church *)
 let int_pow_church_tests : ((int * 'b church) * int) list =
   [
-    ((1, zero), 1);
     ((0, zero), 1);
+    ((0, five), 0);
+    ((1, zero), 1);
     ((2, zero), 1);
     ((2, one), 2);
     ((2, two), 4);
