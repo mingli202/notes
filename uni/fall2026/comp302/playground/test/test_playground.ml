@@ -12,10 +12,9 @@ let w (f : unit -> unit) =
 let t = TestRunner.create ()
 
 let () =
-  (* w Test_hm1.run "hm1"; *)
-  (* w Test_hm2.run "hm2"; *)
+  TestRunner.branch t "hm1" Test_hm1.run;
+  TestRunner.branch t "hm2" Test_hm2.run;
   TestRunner.branch t "hm3" Test_hm3.run;
-  TestRunner.branch t "hm5" Test_hm3.run;
 
   TestRunner.run t
 (* let args = parse_args () in *)
