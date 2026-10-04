@@ -1,14 +1,5 @@
 open Test
 
-(** wraps the test runner with some strings to seperate each other *)
-let w (f : unit -> unit) =
- fun (name : string) ->
-  let s =
-    Printf.sprintf "================= Testing %s =================" name
-  in
-  Printf.printf "%s\n" s;
-  f ()
-
 let t = TestRunner.create ()
 
 let () =

@@ -79,9 +79,7 @@ end = struct
     let verbose = ref false in
     let testnames = ref [] in
     let usage_msg = "dune exec test.exe -- [--verbose] [<test1>...]" in
-    let speclist =
-      [ ("--verbose", Arg.Set verbose, "Ouput debug information") ]
-    in
+    let speclist = [ ("-v", Arg.Set verbose, "More verbose ig") ] in
     let anon_fun testname = testnames := testname :: !testnames in
     let () = Arg.parse speclist anon_fun usage_msg in
     { verbose = !verbose; testnames = !testnames }
