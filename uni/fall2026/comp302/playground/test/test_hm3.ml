@@ -3,7 +3,7 @@ open Printf
 open Test
 
 let another_run (t : TestRunner.t) =
-  TestRunner.test_list t "chuch pow" Hm3.int_pow_church_tests
+  TestRunner.test_list t "church pow" Hm3.int_pow_church_tests
     (fun ((inp1, inp2), exp) ->
       Assert.assert_int (Hm3.int_pow_church inp1 inp2) exp)
 
