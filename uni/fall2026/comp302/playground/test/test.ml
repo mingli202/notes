@@ -1,4 +1,4 @@
-module TestRunner : sig
+module T : sig
   type t
 
   val create : unit -> t
@@ -117,17 +117,15 @@ end = struct
 
       Example:
       {[
-      let t = TestRunner.create ();;
+      let t = T.create ();;
 
       (* factorial 3...SUCCESS *)
-      TestRunner.test t "factorial 3" (fun () ->
-          Assert.assert_int (Hm1.factorial 3) 6);
+      T.test t "factorial 3" (fun () -> Assert.assert_int (Hm1.factorial 3) 6);
 
       (* factorial 3...FAIL: Failure("6 != 5") *)
-      TestRunner.test t "factorial 3" (fun () ->
-          Assert.assert_int (Hm1.factorial 3) 5);
+      T.test t "factorial 3" (fun () -> Assert.assert_int (Hm1.factorial 3) 5);
 
-      TestRunner.run t "test examples"
+      T.run t "test examples"
       ]}
 
       @param title The title of the test
@@ -150,7 +148,7 @@ end = struct
 
       Example:
       {[
-      let t = TestRunner.create ();;
+      let t = T.create ();;
 
       (*
       test binomial [0/5]...SUCCESS
@@ -159,11 +157,11 @@ end = struct
       test binomial [3/5]...SUCCESS
       test binomial [4/5]...FAIL: Failure("120 != 12")
       *)
-      TestRunner.test_list t Hm1.binomial_tests "test binomial"
+      T.test_list t Hm1.binomial_tests "test binomial"
         (fun ((a, b), expected) ->
           Assert.assert_int (Hm1.binomial a b) expected);
 
-      TestRunner.run t "test_list example"
+      T.run t "test_list example"
       ]}
 
       @param name The name of the test
@@ -193,12 +191,12 @@ end = struct
 
       Example:
       {[
-      let t = TestRunner.create ();;
+      let t = T.create ();;
 
       (* factorial 3...SUCCESS *)
-      TestRunner.test t "factorial 3" (Test.a_eq (Hm1.factorial 3) 6);
+      T.test t "factorial 3" (Test.a_eq (Hm1.factorial 3) 6);
 
-      TestRunner.run t "a_eq examples"
+      T.run t "a_eq examples"
       ]} *)
   let a_eq a b = fun _ -> eq a b
 
@@ -210,15 +208,15 @@ end = struct
 
       Example:
       {[
-      let t = TestRunner.create ();;
+      let t = T.create ();;
 
       (* factorial 0...SUCCESS *)
-      TestRunner.test_eq t "factorial 0" (Hm1.factorial 0) 1;
+      T.test_eq t "factorial 0" (Hm1.factorial 0) 1;
 
       (* factorial 3...FAIL: Failure("false != true") *)
-      TestRunner.test_eq t "factorial 3" (Hm1.factorial 3) 5;
+      T.test_eq t "factorial 3" (Hm1.factorial 3) 5;
 
-      TestRunner.run t "a_eq examples"
+      T.run t "a_eq examples"
       ]} *)
   let test_eq self (title : string) a b : unit = test self title (a_eq a b)
 
@@ -228,7 +226,7 @@ end = struct
 
       Example:
       {[
-      let t = TestRunner.create ()
+      let t = T.create ()
 
       let rec exp_to_string exp =
         match exp with
@@ -243,11 +241,11 @@ end = struct
 
       let assert_exp e1 e2 = Assert.assert_to_string e1 e2 exp_to_string;;
 
-      TestRunner.test_eq_a t "parse number"
+      T.test_eq_a t "parse number"
         (fst (Hm2.parse_number [ '1' ]))
         (Hm2.Const 1.0) assert_exp;
 
-      TestRunner.run t "test_eq_a examples"
+      T.run t "test_eq_a examples"
       ]} *)
   let test_eq_a self (title : string) a b (f : 'a -> 'a -> unit) : unit =
     test self title (fun () -> f a b)

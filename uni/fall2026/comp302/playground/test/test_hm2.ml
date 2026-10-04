@@ -12,33 +12,33 @@ let nat_to_string nat =
 let assert_nat nat1 nat2 = Assert.assert_to_string nat1 nat2 nat_to_string
 let assert_exp e1 e2 = Assert.assert_to_string e1 e2 exp_to_string
 
-let run_hm_tests (t : TestRunner.t) =
-  TestRunner.test_list t "int to unary" q1a_nat_of_int_tests (fun (inp, exp) ->
+let run_hm_tests (t : T.t) =
+  T.test_list t "int to unary" q1a_nat_of_int_tests (fun (inp, exp) ->
       assert_nat (q1a_nat_of_int inp) exp);
 
-  TestRunner.test_list t "unary to int" q1b_int_of_nat_tests (fun (inp, exp) ->
+  T.test_list t "unary to int" q1b_int_of_nat_tests (fun (inp, exp) ->
       Assert.assert_int (q1b_int_of_nat inp) exp);
 
-  TestRunner.test_list t "unary add" q1c_add_tests (fun ((in1, in2), exp) ->
+  T.test_list t "unary add" q1c_add_tests (fun ((in1, in2), exp) ->
       assert_nat (q1c_add in1 in2) exp);
 
-  TestRunner.test_list t "test neg" Hm2.q2a_neg_tests (fun (inp, exp) ->
+  T.test_list t "test neg" Hm2.q2a_neg_tests (fun (inp, exp) ->
       assert_exp (Hm2.q2a_neg inp) exp);
 
-  TestRunner.test_list t "test minus" Hm2.q2b_minus_tests (fun ((inp1, inp2), exp) ->
+  T.test_list t "test minus" Hm2.q2b_minus_tests (fun ((inp1, inp2), exp) ->
       assert_exp (Hm2.q2b_minus inp1 inp2) exp);
 
-  TestRunner.test_list t "test pow" Hm2.q2c_pow_tests (fun ((inp1, inp2), exp) ->
+  T.test_list t "test pow" Hm2.q2c_pow_tests (fun ((inp1, inp2), exp) ->
       assert_exp (Hm2.q2c_pow inp1 inp2) exp);
 
-  TestRunner.test_list t "test eval" Hm2.eval_tests (fun ((inp1, inp2), exp) ->
+  T.test_list t "test eval" Hm2.eval_tests (fun ((inp1, inp2), exp) ->
       Assert.assert_float (Hm2.eval inp1 inp2) exp);
 
-  TestRunner.test_list t "test diff" Hm2.diff_tests (fun (inp1, exp) ->
+  T.test_list t "test diff" Hm2.diff_tests (fun (inp1, exp) ->
       assert_exp (Hm2.diff inp1) exp)
 
-let run_parse_eq_cont (t : TestRunner.t) =
-  TestRunner.test_list t "parse simple operations with cont"
+let run_parse_eq_cont (t : T.t) =
+  T.test_list t "parse simple operations with cont"
     [
       ("1", Const 1.0);
       ("10 + 5", Plus (Const 10.0, Const 5.0));
@@ -78,7 +78,7 @@ let run_parse_eq_cont (t : TestRunner.t) =
     ]
     (fun (inp, exp) -> assert_exp (Hm2.parse_eq inp) exp);
 
-  TestRunner.test_list t "parse parenthesis with cont"
+  T.test_list t "parse parenthesis with cont"
     [
       ("(10 + 5) * 2", Times (Plus (Const 10.0, Const 5.0), Const 2.0));
       ( "(10 - 5) * 2",
@@ -98,7 +98,7 @@ let run_parse_eq_cont (t : TestRunner.t) =
     ]
     (fun (inp, exp) -> assert_exp (Hm2.parse_eq inp) exp);
 
-  TestRunner.test_list t "parse variable with cont"
+  T.test_list t "parse variable with cont"
     [
       ("x", Var);
       ("10 * x", Times (Const 10.0, Var));
@@ -106,10 +106,10 @@ let run_parse_eq_cont (t : TestRunner.t) =
     ]
     (fun (inp, exp) -> assert_exp (Hm2.parse_eq inp) exp);
 
-  TestRunner.test_list t "parse 10 * (x + 5) with cont" [ "10 * (x + 5)" ] (fun inp ->
+  T.test_list t "parse 10 * (x + 5) with cont" [ "10 * (x + 5)" ] (fun inp ->
       assert_exp (Hm2.parse_eq inp) (Times (Const 10.0, Plus (Var, Const 5.0))));
 
-  TestRunner.test_list t "first negative"
+  T.test_list t "first negative"
     [
       ("-1", Times (Const (-1.0), Const 1.0));
       ("-(1 + 2)", Times (Const (-1.0), Plus (Const 1.0, Const 2.0)));
@@ -126,7 +126,7 @@ let run_parse_eq_cont (t : TestRunner.t) =
     ]
     (fun (inp, exp) -> assert_exp (Hm2.parse_eq inp) exp);
 
-  TestRunner.test_eq_a t "parse many parenthesis"
+  T.test_eq_a t "parse many parenthesis"
     (parse_eq "(1 + 2) * ((3 + 4) * ((5 + 6) * 7))")
     (Times
        ( Plus (Const 1.0, Const 2.0),
@@ -135,7 +135,7 @@ let run_parse_eq_cont (t : TestRunner.t) =
              Times (Plus (Const 5.0, Const 6.0), Const 7.0) ) ))
     assert_exp;
 
-  TestRunner.test_eq_a t "parse pow result"
+  T.test_eq_a t "parse pow result"
     (parse_eq "(2 + 5) * ((2 + 5) * ((2 + 5) * 1))")
     (Times
        ( Plus (Const 2.0, Const 5.0),
@@ -144,7 +144,7 @@ let run_parse_eq_cont (t : TestRunner.t) =
              Times (Plus (Const 2.0, Const 5.0), Const 1.0) ) ))
     assert_exp;
 
-  TestRunner.test_list t "parse pow operator"
+  T.test_list t "parse pow operator"
     [
       ("2 ^ 4", "2 * (2 * (2 * (2 * 1)))");
       ("1 * 2 ^ 4 + 4", "(1 * (2 * (2 * (2 * (2 * 1)))) + 4)");
@@ -152,6 +152,6 @@ let run_parse_eq_cont (t : TestRunner.t) =
     ]
     (fun (inp, exp) -> assert_exp (Hm2.parse_eq inp) (Hm2.parse_eq exp))
 
-let run (t : TestRunner.t) =
+let run (t : T.t) =
   run_parse_eq_cont t;
   run_hm_tests t
