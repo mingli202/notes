@@ -2,6 +2,7 @@ module TestRunner : sig
   type t
 
   val create : unit -> t
+  val branch : t -> string -> (t -> unit) -> unit
   val run : t -> unit
   val test : t -> string -> (unit -> unit) -> unit
   val test_list : t -> string -> 'a list -> ('a -> unit) -> unit
@@ -13,8 +14,13 @@ module TestRunner : sig
   val test_eq_a : t -> string -> 'a -> 'a -> ('a -> 'a -> unit) -> unit
 end = struct
   type testResult = Fail of string | Skip of string | Success
-  type testcase = { fn : unit -> testResult; name : string }
-  type t = { mutable testcases : testcase list }
+  type ('a, 'b, 'c) fn_or_list = Fn of ('a -> 'b) | List of 'c list
+
+  type t = {
+    mutable fn : (unit, testResult, t) fn_or_list;
+    mutable name : string option;
+  }
+
   type cli_test_args = { verbose : bool; testnames : string list }
 
   let red_ascii = "\027[31m"
@@ -48,13 +54,24 @@ end = struct
     with exn -> Fail (Printexc.to_string exn)
 
   (** whether s matches any of the given regexes *)
-  let _has_match (s : string) (regexes : Str.regexp list) =
-    List.exists (fun r -> Str.string_match r s 0) regexes
+  let _has_match (s : string option) (regexes : Str.regexp list) =
+    if List.length regexes = 0 then true
+    else
+      match s with
+      | None -> true
+      | Some s -> List.exists (fun r -> Str.string_match r s 0) regexes
 
-  let _run_with_testnames (testnames : Str.regexp list) (testcase : testcase) :
-      unit =
-    if _has_match testcase.name testnames then
-      _print_test_result testcase.name (testcase.fn ())
+  let rec _run_with_testnames (testnames : Str.regexp list)
+      (parent_prefix : string option) (testrunner : t) : unit =
+    let prefix =
+      Option.value (Option.map (fun n -> n ^ "/") parent_prefix) ~default:""
+    in
+    let full_name = Option.map (fun n -> prefix ^ n) testrunner.name in
+    if _has_match full_name testnames then
+      match testrunner.fn with
+      | Fn f -> _print_test_result (Option.value full_name ~default:"") (f ())
+      | List children ->
+          List.iter (_run_with_testnames testnames full_name) children
     else ()
 
   (** parses the cli arguments for testing *)
@@ -74,18 +91,26 @@ end = struct
     List.map (fun x -> Str.regexp x) testnames
 
   (** runs the all the testcases that matches the testnames *)
-  let _run_with_cli_args (testcases : testcase list)
-      (testnames : Str.regexp list) : unit =
-    List.iter (_run_with_testnames testnames) testcases
+  let _run_with_cli_args (testcase : t) (testnames : Str.regexp list) : unit =
+    _run_with_testnames testnames None testcase
+
+  let _get_list fn = match fn with Fn _ -> [] | List c -> c
 
   (* PUBLIC INTERFACE *)
   (* docs in the mli file *)
 
-  let create () = { testcases = [] }
+  (** creates a new test runner *)
+  let create () = { name = None; fn = List [] }
+
+  (** creates a sub runner *)
+  let branch self (name : string) (subrunner : t -> unit) =
+    let new_t = { name = Some name; fn = List [] } in
+    let () = self.fn <- List (_get_list self.fn @ [ new_t ]) in
+    subrunner new_t
 
   (** run the test runner *)
   let run self : unit =
-    _run_with_cli_args self.testcases
+    _run_with_cli_args self
       (_test_names_to_regex (_parse_test_args ()).testnames)
 
   (** tests the given function [f], fails if the function raises an error
@@ -110,8 +135,16 @@ end = struct
         The function that is testing stuff. The test fails if the predicate
         raises an error *)
   let test self (title : string) (f : unit -> unit) : unit =
-    self.testcases <-
-      self.testcases @ [ { name = title; fn = _with_error_handling f } ]
+    let children = _get_list self.fn in
+    self.fn <-
+      List
+        (children
+        @ [
+            {
+              name = Some (String.replace_all ~sub:" " ~by:"_" title);
+              fn = Fn (_with_error_handling f);
+            };
+          ])
 
   (** runs a function [f] against the list of given [test_cases]
 
