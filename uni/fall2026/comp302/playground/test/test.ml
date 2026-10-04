@@ -2,6 +2,15 @@ module TestRunner : sig
   type t
 
   val create : unit -> t
+  val run : t -> unit
+  val test : t -> string -> (unit -> unit) -> unit
+  val test_list : t -> string -> 'a list -> ('a -> unit) -> unit
+  val eq : 'a -> 'a -> unit
+  val eq_f : 'a -> 'a -> ('a -> 'a -> bool) -> unit
+  val a_eq : 'a -> 'a -> 'b -> unit
+  val a_eq_f : 'a -> 'a -> ('a -> 'a -> bool) -> 'b -> unit
+  val test_eq : t -> string -> 'a -> 'a -> unit
+  val test_eq_a : t -> string -> 'a -> 'a -> ('a -> 'a -> unit) -> unit
 end = struct
   type testResult = Fail of string | Skip of string | Success
   type testcase = { fn : unit -> testResult; name : string }
