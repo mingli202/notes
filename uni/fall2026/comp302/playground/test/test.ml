@@ -54,25 +54,25 @@ end = struct
     with exn -> Fail (Printexc.to_string exn)
 
   (** whether s matches any of the given regexes *)
-  let _has_match (s : string option) (regexes : Str.regexp list) =
+  let _has_match (s : string option) (regexes : Re.re list) =
     if List.length regexes = 0 then true
     else
       match s with
       | None -> true
-      | Some s -> List.exists (fun r -> Str.string_match r s 0) regexes
+      | Some s -> List.exists (fun r -> Re.execp r s) regexes
 
-  let rec _run_with_testnames (testnames : Str.regexp list)
+  let rec _run_with_testnames (testnames : Re.re list)
       (parent_prefix : string option) (testrunner : t) : unit =
     let prefix =
       Option.value (Option.map (fun n -> n ^ "/") parent_prefix) ~default:""
     in
     let full_name = Option.map (fun n -> prefix ^ n) testrunner.name in
-    if _has_match full_name testnames then
-      match testrunner.fn with
-      | Fn f -> _print_test_result (Option.value full_name ~default:"") (f ())
-      | List children ->
-          List.iter (_run_with_testnames testnames full_name) children
-    else ()
+    match testrunner.fn with
+    | Fn f ->
+        if _has_match full_name testnames then
+          _print_test_result (Option.value full_name ~default:"") (f ())
+    | List children ->
+        List.iter (_run_with_testnames testnames full_name) children
 
   (** parses the cli arguments for testing *)
   let _parse_test_args () : cli_test_args =
@@ -88,10 +88,10 @@ end = struct
 
   (** map string to regex *)
   let _test_names_to_regex (testnames : string list) =
-    List.map (fun x -> Str.regexp x) testnames
+    List.map Re.Perl.compile_pat testnames
 
   (** runs the all the testcases that matches the testnames *)
-  let _run_with_cli_args (testcase : t) (testnames : Str.regexp list) : unit =
+  let _run_with_cli_args (testcase : t) (testnames : Re.re list) : unit =
     _run_with_testnames testnames None testcase
 
   let _get_list fn = match fn with Fn _ -> [] | List c -> c
@@ -104,7 +104,9 @@ end = struct
 
   (** creates a sub runner *)
   let branch self (name : string) (subrunner : t -> unit) =
-    let new_t = { name = Some name; fn = List [] } in
+    let new_t =
+      { name = Some (String.replace_all ~sub:" " ~by:"_" name); fn = List [] }
+    in
     let () = self.fn <- List (_get_list self.fn @ [ new_t ]) in
     subrunner new_t
 
