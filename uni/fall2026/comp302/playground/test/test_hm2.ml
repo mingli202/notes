@@ -153,5 +153,5 @@ let run_parse_eq_cont (t : T.t) =
     (fun (inp, exp) -> assert_exp (Hm2.parse_eq inp) (Hm2.parse_eq exp))
 
 let run (t : T.t) =
-  run_parse_eq_cont t;
+  T.branch t "parse eq with cont" run_parse_eq_cont;
   run_hm_tests t
