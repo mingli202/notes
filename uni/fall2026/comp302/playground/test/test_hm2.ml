@@ -150,7 +150,20 @@ let run_parse_eq_cont (t : T.t) =
       ("1 * 2 ^ 4 + 4", "(1 * (2 * (2 * (2 * (2 * 1)))) + 4)");
       ("(2 + 5) ^ 3", "(2 + 5) * ((2 + 5) * ((2 + 5) * 1))");
     ]
-    (fun (inp, exp) -> assert_exp (Hm2.parse_eq inp) (Hm2.parse_eq exp))
+    (fun (inp, exp) -> assert_exp (Hm2.parse_eq inp) (Hm2.parse_eq exp));
+
+  T.test_list t "parse more than more level"
+    [
+      ( "1 + 1 + 2 * 3 * 4 ^ 2 * 5 + 6",
+        Plus
+          ( Plus
+              ( Plus (Const 1.0, Const 1.0),
+                Times
+                  ( Times (Const 2.0, Const 3.0),
+                    Times (Const 4.0, Times (Const 4.0, Const 1.0)) ) ),
+            Const 6.0 ) );
+    ]
+    (fun (inp, exp) -> assert_exp (Hm2.parse_eq inp) exp)
 
 let run (t : T.t) =
   T.branch t "parse eq with cont" run_parse_eq_cont;
