@@ -18,3 +18,8 @@ let assert_float a b = assert_to_string a b string_of_float
 
 (** assert the two given string are equal *)
 let assert_string a b = assert_to_string a b (fun a -> a)
+
+let assert_arr a b to_string =
+  assert_string
+    (Print.arr_to_string a to_string)
+    (Print.arr_to_string b to_string)
