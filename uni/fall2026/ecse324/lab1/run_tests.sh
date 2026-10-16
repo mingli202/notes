@@ -27,30 +27,38 @@ fi
 
 logisim() { "$JAVA" -jar "$JAR" --no-splash "$@"; }
 
-GREEN=$'\e[32m'; RED=$'\e[31m'; RESET=$'\e[0m'
-pass=0; fail=0
+GREEN=$'\e[32m'
+RED=$'\e[31m'
+RESET=$'\e[0m'
+pass=0
+fail=0
 tmp="$(mktemp)"
 trap 'rm -f "$tmp"' EXIT
 
 report() { # name status
 	if [[ "$2" == 0 ]]; then
-		echo "${GREEN}PASS${RESET}  $1"; ((pass++))
+		echo "${GREEN}PASS${RESET}  $1"
+		((pass++))
 	else
-		echo "${RED}FAIL${RESET}  $1"; ((fail++))
+		echo "${RED}FAIL${RESET}  $1"
+		((fail++))
 	fi
 }
 
 # Task 1: ALU (test vector)
 logisim --test-vector ALU "$T/alu_test.vec" "$CIRC" >"$tmp" 2>&1
-grep -q "Passed: 28, Failed: 0" "$tmp"; st=$?
+grep -q "Passed: 28, Failed: 0" "$tmp"
+st=$?
 report "Task 1: ALU" $st
 [[ $st != 0 && $VERBOSE == 1 ]] && tail -5 "$tmp"
 
 # Compare tty table output against a golden file
 run_table() { # name golden args...
-	local name="$1" golden="$2"; shift 2
+	local name="$1" golden="$2"
+	shift 2
 	logisim "$CIRC" --tty table "$@" >"$tmp" 2>/dev/null
-	diff -q --ignore-blank-lines <(awk 1 "$golden") <(awk 1 "$tmp") >/dev/null; local st=$?
+	diff -q --ignore-blank-lines <(awk 1 "$golden") <(awk 1 "$tmp") >/dev/null
+	local st=$?
 	report "$name" $st
 	if [[ $st != 0 && $VERBOSE == 1 ]]; then
 		diff --ignore-blank-lines <(awk 1 "$golden") <(awk 1 "$tmp") --color=always
