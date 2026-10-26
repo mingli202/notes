@@ -41,7 +41,7 @@ let run t =
       ("~x", Negation (Variable "x"));
       ("x | y", Disjunction (Variable "x", Variable "y"));
       ( "x | y & z",
-        Conjunction (Disjunction (Variable "x", Variable "y"), Variable "z") );
+        Disjunction (Variable "x", Conjunction (Variable "y", Variable "z")) );
       ("x | ~y", Disjunction (Variable "x", Negation (Variable "y")));
       ("~x | y", Disjunction (Negation (Variable "x"), Variable "y"));
       ( "x | ~~~y",
@@ -53,4 +53,42 @@ let run t =
               (Variable "x", Negation (Negation (Negation (Variable "y")))),
             Variable "z" ) );
     ]
-    (fun (a, b) -> assert_formula (parse_formula a) b)
+    (fun (a, b) -> assert_formula (parse_formula a) b);
+
+  T.test_list t "collect_variables"
+    [
+      ("x", [ "x" ]);
+      ("x | y", [ "x"; "y" ]);
+      ("~x | y | x & y & z | u & a & u", [ "x"; "y"; "z"; "u"; "a" ]);
+    ]
+    (fun (a, b) ->
+      Assert.assert_arr
+        (collect_variables (parse_formula a))
+        (List.sort compare b)
+        (fun x -> x));
+
+  T.test_list t "eval"
+    [
+      ("x", Variable_map.empty |> Variable_map.add "x" true, true);
+      ("~x", Variable_map.empty |> Variable_map.add "x" false, true);
+      ("x", Variable_map.empty |> Variable_map.add "x" false, false);
+      ( "x | y",
+        Variable_map.empty |> Variable_map.add "x" false
+        |> Variable_map.add "y" true,
+        true );
+      ( "x & y",
+        Variable_map.empty |> Variable_map.add "x" false
+        |> Variable_map.add "y" true,
+        false );
+      ( "x & y",
+        Variable_map.empty |> Variable_map.add "x" true
+        |> Variable_map.add "y" true,
+        true );
+      ( "x & y & ~z | z | p & q",
+        Variable_map.empty |> Variable_map.add "x" true
+        |> Variable_map.add "y" true |> Variable_map.add "z" true
+        |> Variable_map.add "p" true |> Variable_map.add "q" true,
+        true );
+    ]
+    (fun (f_str, ass, res) ->
+      Assert.assert_bool (eval ass (parse_formula f_str)) res)
