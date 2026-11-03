@@ -111,7 +111,7 @@ let parse_formula (s : string) : formula =
               | None -> new_f
             in
             Printf.printf "new_f: %s\n" (formula_to_string new_f);
-            (new_f, new_i)
+            parse_formula_helper new_i (Some new_f) prev_tok
           end
           else if c > 0 then return ()
           else begin
@@ -148,17 +148,44 @@ let rec eval (assignment : truth_assignment) (f : formula) : bool =
 (* Question 1 *)
 (*----------------------------------------*)
 
-(* TODO: Implement the function. *)
+(** find an assignment that satisfies the given formula *)
 let find_sat_assignment_exc (formula : formula) : truth_assignment =
-  raise NotImplemented
+  let ass = ref Variable_map.empty in
+  let variables = collect_variables formula in
+  let rec loop arr =
+    match arr with
+    | var :: rest -> begin
+        ass := Variable_map.add var true !ass;
+        try loop rest
+        with Unsatisfiable_formula ->
+          ass := Variable_map.add var false !ass;
+          loop rest
+      end
+    | [] -> if eval !ass formula then !ass else raise Unsatisfiable_formula
+  in
+  loop variables
 
 (* Question 2 *)
 (*----------------------------------------*)
 
-(* TODO: Implement the function. *)
-let rec find_sat_assignment_cps (formula : formula)
+(** find an assignment that satisfies the given formula using continuation *)
+let find_sat_assignment_cps (formula : formula)
     (return : truth_assignment -> 'r) (fail : unit -> 'r) : 'r =
-  raise NotImplemented
+  let ass = ref Variable_map.empty in
+  let variables = collect_variables formula in
+  let rec loop arr (return : truth_assignment -> 'r) (fail : unit -> 'r) =
+    match arr with
+    | var :: rest -> begin
+        ass := Variable_map.add var true !ass;
+        loop rest return (fun () ->
+            begin
+              ass := Variable_map.add var false !ass;
+              loop rest return fail
+            end)
+      end
+    | [] -> if eval !ass formula then return !ass else fail ()
+  in
+  loop variables return fail
 
 let satisfying_assignment_of formula =
   find_sat_assignment_cps formula (fun x -> Some x) (fun () -> None)
