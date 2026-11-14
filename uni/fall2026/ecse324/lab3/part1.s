@@ -178,22 +178,23 @@ display_msg:
         MOV V1, A1 // the message e.g. 0x00C0FFEE
         MOV V2, A2 // the message length e.g. 6
         MOV V3, #0 // current index
+        MOV V4, #0xF // current mask
 
 loop_display_msg:
         CMP V3, V2
         BGE done_display_msg // done if index >= length
 
-        MOV V4, #0xF
-        LSL V5, V3, #4 // right shift the index by 4 to get to next byte position
-        LSL V4, V4, V5 // right shfit the mask to get byte position
-
         AND A2, V1, V4 // and to get byte
+        LSL V5, V3, #2
         LSR A2, A2, V5 // shift it back to be 0x0000000{byte}
 
         MOV A1, #1
-        LSR A1, A1, V3 // shift hex index by current index to light the right one 
+        LSL A1, A1, V3 // shift hex index by current index to light the right one 
 
         BL HEX_write_ASM
+
+        ADD V3, V3, #1
+        LSL V4, V4, #4 // shift to the next byte
         B loop_display_msg
 
 done_display_msg:
@@ -201,7 +202,10 @@ done_display_msg:
         BX LR
 
 _start:
-        MOV A1, #0x00C0FFEE
+        MOV A1, #0b00111111
+        BL HEX_clear_ASM
+
+        LDR A1, =#0x00C0FFEE
         MOV A2, #6
         BL display_msg
 
