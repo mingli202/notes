@@ -98,6 +98,76 @@ done_write_raw:
         POP {V1-V4, LR}
         BX LR
 
+.equ PUSH_BTN_ADDR, 0xFF200050
+// read_PB_data_ASM returns indices of the pressed pushbuttons
+// returns A1 list of pressed pushbuttons
+read_PB_data_ASM:
+        LDR A2, =PUSH_BTN_ADDR
+        LDR A1, [A2]
+        BX LR
+
+// PB_data_is_pressed_ASM
+// A1: index of push button
+// returns 0x00000001 if the button is pressed
+PB_data_is_pressed_ASM:
+        LDR A2, =PUSH_BTN_ADDR
+        LDR A3, [A2] // push btn data
+        TST A3, A1 // zero is 1 if bit A1 is not set
+        MOVEQ A1, #0
+        MOVNE A1, #1
+
+        BX LR
+
+// returns the indices of the pushbottons that have been pressed
+// and then release (the edge bits from the pushbutton's Edgecapture register)
+read_PB_edgecp_ASM:
+        LDR A2, =PUSH_BTN_ADDR
+        LDR A1, [A2, #0xC]
+
+        BX LR
+
+// receives a pushbutton index
+// A1: index of pushbutton
+// returns #1 if it has been pressed and released
+PB_edgecp_is_pressed_ASM:
+        LDR A2, =PUSH_BTN_ADDR
+        LDR A3, [A2, #0xC] // edgecapture btn data
+        TST A3, A1 // zero is 1 if bit A1 is not set
+        MOVEQ A1, #0
+        MOVNE A1, #1
+
+        BX LR
+
+// clears the pushbutton Edgecapture register
+PB_clear_edgecp_ASM:
+        LDR  A2, =PUSH_BTN_ADDR
+        LDR  A1, [A2, #0xC]
+        STR  A1, [A2, #0xC]     // write back what was read to clear it
+        BX   LR
+
+// receives pushbutton as indices
+// enables interrupt function for the corresponding pushbuttons
+// by setting the interrupt mask bits to '1'
+// A1: index of push button
+enable_PB_INT_ASM:
+        LDR A2, =PUSH_BTN_ADDR
+        LDR A3, [A2, #0x8] // value of interrupt mask
+
+        ORR A3, A3, A1  // enable them
+        STR A3, [A2, #0x8]
+        BX LR
+
+
+// receives pushbutton indices as an argument
+// disables interrupt function by setting to '0'
+disable_PB_INT_ASM:
+        LDR A2, =PUSH_BTN_ADDR
+        LDR A3, [A2, #0x8] // value of interrupt mask
+
+        BIC A3, A3, A1  // disable them
+        STR A3, [A2, #0x8]
+        BX LR
+
 
 _start:
 loop:
