@@ -1,12 +1,5 @@
 .global _start
 
-HEX0 = 0x00000001
-HEX1 = 0x00000002
-HEX2 = 0x00000004
-HEX3 = 0x00000008
-HEX4 = 0x00000010
-HEX5 = 0x00000020
-
 .data
 HEX_CODES:
         .byte 0b00111111, 0b00000110, 0b01011011, 0b01001111 // 0, 1, 2, 3
@@ -66,7 +59,8 @@ HEX_write_ASM:
         PUSH {LR}
 
         LDR A3, =HEX_CODES
-        LDR A2, [A3, A2]
+        LDRB A2, [A3, A2]
+        BL HEX_write_raw
 
         POP {LR}
         BX LR
@@ -107,7 +101,11 @@ done_write_raw:
 
 _start:
 loop:
-        BL read_slider_switches_ASM
-        BL write_LEDs_ASM
-        B loop
+        MOV A1, #0b00000101
+        MOV A2, #0x0000000B
+
+        BL HEX_write_ASM
+
+done:
+        B done
 
