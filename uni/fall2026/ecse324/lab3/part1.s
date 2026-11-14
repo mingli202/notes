@@ -180,6 +180,10 @@ display_msg:
         MOV V3, #0 // current index
         MOV V4, #0xF // current mask
 
+        // clear the display first
+        MOV A1, #0b00111111
+        BL HEX_clear_ASM
+
 loop_display_msg:
         CMP V3, V2
         BGE done_display_msg // done if index >= length
