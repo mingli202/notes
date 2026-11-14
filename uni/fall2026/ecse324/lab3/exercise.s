@@ -170,12 +170,57 @@ disable_PB_INT_ASM:
 
 
 _start:
-loop:
-        MOV A1, #0b00000101
-        MOV A2, #0x0000000B
+        MOV A1, #0x3F
+        BL HEX_clear_ASM // start with all displays off
 
+        // interrupt mask test: enable all, then disable PB0 and PB2
+        MOV A1, #0xF
+        BL enable_PB_INT_ASM
+        MOV A1, #0x5
+        BL disable_PB_INT_ASM
+
+        LDR A2, =PUSH_BTN_ADDR
+        LDR A2, [A2, #0x8] // interrupt mask, expect 0xA
+        AND A2, A2, #0xF
+        MOV A1, #0x2 // HEX1 shows the mask
         BL HEX_write_ASM
 
-done:
-        B done
+        BL PB_clear_edgecp_ASM // start with no captured presses
+
+test_loop:
+        // LED0-3: pushbuttons currently held, LED9: PB3 currently held
+        BL read_PB_data_ASM
+        MOV V1, A1
+        MOV A1, #0x8
+        BL PB_data_is_pressed_ASM
+        ORR A1, V1, A1, LSL #9
+        BL write_LEDs_ASM
+
+        // HEX0: raw edgecapture bits as a hex digit
+        BL read_PB_edgecp_ASM
+        AND A2, A1, #0xF
+        MOV A1, #0x1
+        BL HEX_write_ASM
+
+        // HEX2-HEX5: 1 if PB0-PB3 has been pressed and released, else 0
+        MOV V1, #0x1 // pushbutton index
+        MOV V2, #0x4 // display index, starting at HEX2
+edgecp_loop:
+        MOV A1, V1
+        BL PB_edgecp_is_pressed_ASM
+        MOV A2, A1
+        MOV A1, V2
+        BL HEX_write_ASM
+
+        LSL V1, V1, #1
+        LSL V2, V2, #1
+        CMP V1, #0x10
+        BLT edgecp_loop
+
+        // SW0 up: clear the edgecapture register
+        BL read_slider_switches_ASM
+        TST A1, #0x1
+        BLNE PB_clear_edgecp_ASM
+
+        B test_loop
 
