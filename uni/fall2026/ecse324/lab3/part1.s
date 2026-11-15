@@ -20,8 +20,6 @@ HEX_ADDR:
 MSG:
         .word 0x0C0FFEE6, 0x00CAFE55, 0x000CAB54, 0x0000ACE3
 
-MSG_SLIDER_MAP:
-        .byte 0, 1, 5, 3
 
 .align 2
 
@@ -278,7 +276,7 @@ check_switches_index_next:
 // caps the count at 1023 (2^10 - 1)
 display_rotation_count:
         PUSH {LR}
-        LDR A2, =#1023
+        LDR A2, =1023
 
         CMP A1, A2
         MOVGT A1, A2
@@ -299,6 +297,7 @@ poll:
         
         MOV V4, #0 // current offset
         MOV V5, #0 // rotation count
+        MOV V6, #1 // direction
    
 draw:
         MOV A1, V2
@@ -312,15 +311,16 @@ draw:
 loop:
         BL read_slider_switches_ASM
         BL check_switches_index
-        MOV V6, A1
+        MOV V7, A1
 
-        CMP V6, #3
+        CMP V7, #3
         BGT invalid_config // go to invalid config and skip other input handling
 
-        CMP V6, V1
+        // draw message if new
+        CMP V7, V1
         BEQ next
 
-        MOV V1, V6 // only draw if new message
+        MOV V1, V7
         MOV A1, V1
         BL get_message
         MOV V2, A1 // message
@@ -330,44 +330,52 @@ loop:
         MOV V4, #6
         SUB V4, V4, V3
 
+        // reset rotation count
+        MOV V5, #0
+
+        // clear any rotations
+        BL PB_edgecp_is_pressed_ASM
+
         B draw
 
 next:
         LDR A1, =PB3
         BL PB_edgecp_is_pressed_ASM
         CMP A1, #1
-        BEQ rotate_left
+        BEQ rotate
 
         LDR A1, =PB2
         BL PB_edgecp_is_pressed_ASM
         CMP A1, #1
-        BEQ rotate_right
+        BEQ reverse_direction
 
         B loop
 
-rotate_left:
-        ADD V4, V4, #1
+rotate:
+        ADD V4, V4, V6
         ADD V5, V5, #1
         BL PB_clear_edgecp_ASM
         B draw
 
-rotate_right:
-        SUB V4, V4, #1
-        ADD V5, V5, #1
-        BL PB_clear_edgecp_ASM
-        B draw
+reverse_direction:
+        RSB V6, V6, #0
+        B loop
 
 invalid_config:
-        MOV V1, V6 // only draw if new message
+        MOV V1, V6
         MOV A1, #0b00111111
         BL HEX_clear_ASM
+
+        // reset rotation count immediately and draw
+        MOV V5, #0
+        MOV A1, V5
+        BL display_rotation_count
+
+        // clear any pending rotations just to be sure
+        BL PB_edgecp_is_pressed_ASM
+        
         B loop
 
-poll_done:
-        B loop
-
-        POP {V1-V8, LR}
-        BX LR
 
 _start:
         BL poll
