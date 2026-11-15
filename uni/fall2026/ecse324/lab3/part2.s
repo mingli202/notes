@@ -1,43 +1,49 @@
-.section .vectors, "ax"
-B _start // reset vector
-B SERVICE_UND // undefined instruction vector
-B SERVICE_SVC // software interrupt vector
-B SERVICE_ABT_INST // aborted prefetch vector
-B SERVICE_ABT_DATA // aborted data vector
-.word 0 // unused vector
-B SERVICE_IRQ // IRQ interrupt vector
-B SERVICE_FIQ // FIQ interrupt vector
-
-
 .global _start
-
-LOAD_ADDR = 0xFFFEC600
-COUNTER_ADDR = 0xFFFEC604
-CTRL_ADDR = 0xFFFEC608
-INT_ST_ADDR = 0xFFFEC60C
 
 PB0 = 0x00000001
 PB1 = 0x00000002
 PB2 = 0x00000004
 PB3 = 0x00000008
 
+BLANK = 16
+
 .data
+
+.align 2
+HEX_ADDR:
+        .word 0xFF200031,  0xFF200030, 0xFF200023, 0xFF200022, 0xFF200021, 0xFF200020
+
 HEX_CODES:
         .byte 0b00111111, 0b00000110, 0b01011011, 0b01001111 // 0, 1, 2, 3
         .byte 0b01100110, 0b01101101, 0b01111101, 0b00000111 // 4, 5, 6, 7
         .byte 0b01111111, 0b01101111, 0b01110111, 0b01111100 // 8, 9, A, b
         .byte 0b00111001, 0b01011110, 0b01111001, 0b01110001 // C, d, E, F
+        .byte 0b00000000 // blank
+
+COFFEE:
+        .byte 6, 0xC, 0, 0xF, 0xF, 0xE, 0xE
+
+CAFES:
+        .byte 6, 0xC, 0xA, 0xF, 0xE, 5, BLANK
+
+CABS:
+        .byte 6, 0xC, 0xA, 0xB, 5, BLANK, BLANK
+
+ACE:
+        .byte 6, 0xA, 0xC, 0xE, BLANK, BLANK, BLANK
+
+MSG_8:
+        .byte 10, 7, 0, 0xA, 0xD, 5, 7, 0, 0, 1, 5
+
+MSG_10:
+        .byte 16, 0xC, 0xA, 0xF, 0xE, BLANK , 0xB, 0xE, 0xE, 0xF, BLANK, 0xC, 0, 0xF, 0xF, 0xE, 0xE
 
 .align 2
-HEX_ADDR:
-        .word 0xFF200020, 0xFF200021, 0xFF200022, 0xFF200023, 0xFF200030, 0xFF200031
-
-// MSG is a table where the lsb is the length of the message that follows right after
-MSG:
-        .word 0x0C0FFEE6, 0x00CAFE55, 0x000CAB54, 0x0000ACE3
+// MSG_TABLE is a table where the lsb is the length of the message that follows right after
+MSG_TABLE:
+        .word COFFEE, CAFES, CABS, ACE, MSG_8, MSG_10
 
 
-.align 2
 
 .text
 // Slider Switches Driver
@@ -196,45 +202,47 @@ disable_PB_INT_ASM:
         STR A3, [A2, #0x8]
         BX LR
 
-        
 // display A1 with length A2 and offset A3
+// A1: message byte array
+// A2: message length
+// A3: starting index
 display_msg:
-        PUSH {V1-V7, LR}
-        MOV V1, A1 // the message e.g. 0x00C0FFEE
+        PUSH {V1-V4, LR}
+        MOV V1, A1 // the message addr e.g. C -> O -> F -> F -> E -> E
         MOV V2, A2 // the message length e.g. 6
-        MOV V3, #0 // current index
-        MOV V4, #0xF // current mask
-        MOV V6, A3 // offset
+        MOV V3, #0 // current hex index
+        MOV V4, A3 // offset, starting index
 
         // clear the display first
         MOV A1, #0b00111111
         BL HEX_clear_ASM
 
 loop_display_msg:
+        CMP V3, #6
+        BGE done_display_msg // done if index >= 6 (all the displays)
+
         CMP V3, V2
-        BGE done_display_msg // done if index >= length
-        
-        ADD V7, V3, V6 // add the offset
-        MOV A1, V7
-        MOV A2, #6 // hardcode the display's length
-        BL mod // mod the index
-        MOV V7, A1 // put back the index
-         
+        BGE done_display_msg // done if index >= length (for msgs smaller than 6)
+
+        // ensure message index is within its length
+        ADD A1, V4, V3 // offset + display_index
+        MOV A2, V2 
+        BL mod // A1 is within message bound
+
+        // load the byte at offset
+        LDRB A2, [V1, A1]
+
+        // enable the right one
         MOV A1, #1
-        LSL A1, A1, V7 // shift hex index by current index to light the right one 
-
-        AND A2, V1, V4 // and to get byte
-        LSL V5, V3, #2
-        LSR A2, A2, V5 // shift it back to be 0x0000000{byte}
-
+        LSL A1, A1, V3
+        
         BL HEX_write_ASM
 
         ADD V3, V3, #1 // increment count by 1
-        LSL V4, V4, #4 // shift to the next byte
         B loop_display_msg
 
 done_display_msg:
-        POP {V1-V7, LR}
+        POP {V1-V4, LR}
         BX LR
 
 // A1 mod A2
@@ -261,257 +269,157 @@ mod_sub:
 // returns A1: message, A2: length
 get_message:
         LSL A1, A1, #2
-        LDR A2, =MSG
-        LDR A1, [A2, A1]
-        AND A2, A1, #0xF // get the last byte
-        LSR A1, A1, #4 // remove the last byte
+        LDR A2, =MSG_TABLE
+        LDR A1, [A2, A1] // A1 is the pointer to the message head
+        LDRB A2, [A1], #1 // A2 is the length, A1 points to first char 
         BX LR
 
         
-// check if the switches index is 0, 1, 2, or 4
+// check if the switches index is 0, 1, 2, 4, 8 or 10
 // A1: switches to check
+// returns A1: index of the message table
+// -1 if invalid index
 check_switches_index:
-        MOV A2, #4 // return value and index of message
-
         CMP A1, #0
-        BEQ check_switches_index_next;
+        BXEQ LR;
 
-        CMP A1, #1
-        BEQ check_switches_index_next;
+        MOV A2, #1 // one-hot mask
+        MOV A3, #1 // index
 
-        CMP A1, #2
-        BEQ check_switches_index_next;
+check_switches_index_loop:
+        CMP A2, #0x10
+        BGT check_switches_index_invalid
 
-        CMP A1, #4
-        MOVEQ A1, #3
-        MOVNE A1, #4
+        CMP A1, A2
+        BEQ check_switches_index_done
 
-check_switches_index_next:
+        LSL A2, A2, #1 // next one-hot index
+        ADD A3, A3, #1
+        B  check_switches_index_loop
+        
+check_switches_index_invalid:
+        MOV A1, #1
+        RSB A1, A1, #0
         BX LR
 
-
-// configures the private timer
-// A1: initial count value (32bit value into load register)
-// A2: configuration bits (15-8bit prescaler, 2 I, 1 A 0 E)
-ARM_TIM_config_ASM:
-        LDR A3, =LOAD_ADDR
-        LDR A4, =CTRL_ADDR
-
-        STR A1, [A3]
-        STR A2, [A4]
-    
+check_switches_index_done:
+        MOV A1, A3
         BX LR
 
-// returns the F value
-// from the A9 private timer interrupt status register
-// returns strictly 0 or 1 without anything before it
-ARM_TIM_read_INT_ASM:
-        LDR A2, =INT_ST_ADDR
-        LDR A1, [A2]
-
-        TST A1, #1
-        MOVEQ A1, #0
-        MOVNE A1, #1
-
-        BX LR
-
-// clears the 'F' value by writing a #1 to it
-ASM_TIM_clear_INT_ASM:
-        LDR A1, =INT_ST_ADDR
-        MOV A2, #1
-        STR A2, [A1]
-
-        BX LR
-
-CONFIG_GIC:
+// displays the number A1 as a binary on the leds
+// caps the count at 1023 (2^10 - 1)
+display_rotation_count:
         PUSH {LR}
-        /* To configure the FPGA KEYS interrupt (ID 73):
-        * 1. set the target to cpu0 in the ICDIPTRn register
-        * 2. enable the interrupt in the ICDISERn register */
-        /* CONFIG_INTERRUPT (int_ID (R0), CPU_target (R1)); */
-        /* NOTE: you can configure different interrupts
-        by passing their IDs to R0 and repeating the next 3 lines */
-        MOV R0, #73 // KEY port (Interrupt ID = 73)
-        MOV R1, #1 // this field is a bit-mask; bit 0 targets cpu0
-        BL CONFIG_INTERRUPT
-        /* configure the GIC CPU Interface */
-        LDR R0, =0xFFFEC100 // base address of CPU Interface
-        /* Set Interrupt Priority Mask Register (ICCPMR) */
-        LDR R1, =0xFFFF // enable interrupts of all priorities levels
-        STR R1, [R0, #0x04]
-        /* Set the enable bit in the CPU Interface Control Register (ICCICR).
-        * This allows interrupts to be forwarded to the CPU(s) */
-        MOV R1, #1
-        STR R1, [R0]
-        /* Set the enable bit in the Distributor Control Register (ICDDCR).
-        * This enables forwarding of interrupts to the CPU Interface(s) */
-        LDR R0, =0xFFFED000
-        STR R1, [R0]
-        POP {PC}
+        LDR A2, =1023
 
-/*
-* Configure registers in the GIC for an individual Interrupt ID
-* We configure only the Interrupt Set Enable Registers (ICDISERn) and
-* Interrupt Processor Target Registers (ICDIPTRn). The default (reset)
-* values are used for other registers in the GIC
-* Arguments: R0 = Interrupt ID, N
-* R1 = CPU target
-*/
-CONFIG_INTERRUPT:
-        PUSH {R4-R5, LR}
-        /* Configure Interrupt Set-Enable Registers (ICDISERn).
-        * reg_offset = (integer_div(N / 32) * 4
-        * value = 1 << (N mod 32) */
-        LSR R4, R0, #3 // calculate reg_offset
-        BIC R4, R4, #3 // R4 = reg_offset
-        LDR R2, =0xFFFED100
-        ADD R4, R2, R4 // R4 = address of ICDISER
-        AND R2, R0, #0x1F // N mod 32
-        MOV R5, #1 // enable
-        LSL R2, R5, R2 // R2 = value
-        /* Using the register address in R4 and the value in R2 set the
-        * correct bit in the GIC register */
-        LDR R3, [R4] // read current register value
-        ORR R3, R3, R2 // set the enable bit
-        STR R3, [R4] // store the new register value
-        /* Configure Interrupt Processor Targets Register (ICDIPTRn)
-        * reg_offset = integer_div(N / 4) * 4
-        * index = N mod 4 */
-        BIC R4, R0, #3 // R4 = reg_offset
-        LDR R2, =0xFFFED800
-        ADD R4, R2, R4 // R4 = word address of ICDIPTR
-        AND R2, R0, #0x3 // N mod 4
-        ADD R4, R2, R4 // R4 = byte address in ICDIPTR
-        /* Using register address in R4 and the value in R2 write to
-        * (only) the appropriate byte */
-        STRB R1, [R4]
-        POP {R4-R5, PC}
-
-
-/*--- Undefined instructions --------------------------------------*/
-SERVICE_UND:
-        B SERVICE_UND
-/*--- Software interrupts ----------------------------------------*/
-SERVICE_SVC:
-        B SERVICE_SVC
-/*--- Aborted data reads ------------------------------------------*/
-SERVICE_ABT_DATA:
-        B SERVICE_ABT_DATA
-/*--- Aborted instruction fetch -----------------------------------*/
-SERVICE_ABT_INST:
-        B SERVICE_ABT_INST
-/*--- IRQ ---------------------------------------------------------*/
-SERVICE_IRQ:
-        PUSH {R0-R7, LR}
-        /* Read the ICCIAR from the CPU Interface */
-        LDR R4, =0xFFFEC100
-        LDR R5, [R4, #0x0C] // read from ICCIAR
-        /* NOTE: Check which interrupt has occurred (check interrupt IDs)
-        Then call the corresponding ISR
-        If the ID is not recognized, branch to UNEXPECTED
-        See the assembly example provided in the DE1-SoC Computer Manual
-        on page 46 */
-Pushbutton_check:
-        CMP R5, #73
-UNEXPECTED:
-        BNE UNEXPECTED // if not recognized, stop here
-        BL KEY_ISR
-EXIT_IRQ:
-        /* Write to the End of Interrupt Register (ICCEOIR) */
-        STR R5, [R4, #0x10] // write to ICCEOIR
-        POP {R0-R7, LR}
-        SUBS PC, LR, #4
-/*--- FIQ ---------------------------------------------------------*/
-SERVICE_FIQ:
-        B SERVICE_FIQ
-
-KEY_ISR:
-        LDR R0, =0xFF200050 // base address of pushbutton KEY port
-        LDR R1, [R0, #0xC] // read edge capture register
-        MOV R2, #0xF
-        STR R2, [R0, #0xC] // clear the interrupt
-        LDR R0, =0xFF200020 // base address of HEX display
-CHECK_KEY0:
-        MOV R3, #0x1
-        ANDS R3, R3, R1 // check for KEY0
-        BEQ CHECK_KEY1
-        MOV R2, #0b00111111
-        STR R2, [R0] // display "0"
-        B END_KEY_ISR
-CHECK_KEY1:
-        MOV R3, #0x2
-        ANDS R3, R3, R1 // check for KEY1
-        BEQ CHECK_KEY2
-        MOV R2, #0b00000110
-        STR R2, [R0] // display "1"
-        B END_KEY_ISR
-CHECK_KEY2:
-        MOV R3, #0x4
-        ANDS R3, R3, R1 // check for KEY2
-        BEQ IS_KEY3
-        MOV R2, #0b01011011
-        STR R2, [R0] // display "2"
-        B END_KEY_ISR
-IS_KEY3:
-        MOV R2, #0b01001111
-        STR R2, [R0] // display "3"
-END_KEY_ISR:
+        CMP A1, A2
+        MOVGT A1, A2
+        
+        BL write_LEDs_ASM
+        POP {LR}
         BX LR
 
+// the main loop
+poll:
+        PUSH {V1-V8, LR}
+        MOV V1, #0 // message index
+
+        MOV A1, V1
+        BL get_message
+        MOV V2, A1 // message
+        MOV V3, A2 // length
         
-_start:
-        /* Set up stack pointers for IRQ and SVC processor modes */
-        MOV R1, #0b11010010 // interrupts masked, MODE = IRQ
-        MSR CPSR_c, R1 // change to IRQ mode
-        LDR SP, =0xFFFFFFFF - 3 // set IRQ stack to A9 on-chip memory
-        /* Change to SVC (supervisor) mode with interrupts disabled */
-        MOV R1, #0b11010011 // interrupts masked, MODE = SVC
-        MSR CPSR, R1 // change to supervisor mode
-        LDR SP, =0x3FFFFFFF - 3 // set SVC stack to top of DDR3 memory
-        BL CONFIG_GIC // configure the ARM GIC
-        // NOTE: write to the pushbutton KEY interrupt mask register
-        // Or, you can call enable_PB_INT_ASM subroutine from previous task
-        // to enable interrupt for ARM A9 private timer,
-        // use ARM_TIM_config_ASM subroutine
-        LDR R0, =0xFF200050 // pushbutton KEY base address
-        MOV R1, #0xF // set interrupt mask bits
-        STR R1, [R0, #0x8] // interrupt mask register (base + 8)
-        // enable IRQ interrupts in the processor
-        MOV R0, #0b01010011 // IRQ unmasked, MODE = SVC
-        MSR CPSR_c, R0
+        MOV V4, #0 // current offset
+        MOV V5, #0 // rotation count
+        MOV V6, #1 // direction
+   
+draw:
+        MOV A1, V2
+        MOV A2, V3
+        MOV A3, V4
+        BL display_msg       
 
-        
-        MOV V1, #0 // counter value
-
-        // initial load value, 49 999 999, so timer finishes every 0.25 seconds
-        LDR A1, =0x2FAF07F
-        LDR A2, =0b0000000000000011
-        //         | pres |     IAE
-
-        BL HEX_clear_ASM
-
-IDLE:
-        B IDLE // This is where you write your main program task(s)
+        MOV A1, V5
+        BL display_rotation_count
 
 loop:
-        MOV A1, #1 // hex0
-        MOV A2, V1 // counter value
-        BL HEX_write_ASM
- 
-wait_for_interupt:
-        BL ARM_TIM_read_INT_ASM
-        CMP A1, #1
-        BNE wait_for_interupt
+        BL read_slider_switches_ASM
+        BL check_switches_index
+        MOV V7, A1
 
-        BL ASM_TIM_clear_INT_ASM
-        
-        ADD V1, V1, #1
-        CMP V1, #15
-        MOVGT V1, #0 // reset to 0 if greater than
+        CMP V7, #5
+        BHI invalid_config // go to invalid config and skip other input handling
+
+        // draw message if new
+        CMP V7, V1
+        BEQ next
+
+        MOV V1, V7
+        MOV A1, V1
+        BL get_message
+        MOV V2, A1 // message
+        MOV V3, A2 // length
+
+        // reset offset
+        MOV V4, #0
+
+        // reset rotation count
+        MOV V5, #0
+
+        // clear any rotations
+        BL PB_clear_edgecp_ASM
+
+        B draw
+
+next:
+        LDR A1, =PB3
+        BL PB_edgecp_is_pressed_ASM
+        CMP A1, #1
+        BEQ rotate
+
+        LDR A1, =PB2
+        BL PB_edgecp_is_pressed_ASM
+        CMP A1, #1
+        BEQ reverse_direction
 
         B loop
 
-    
-_stop:
-        B _stop
-                                
+rotate:
+        ADD V4, V4, V6
+
+        // cap offset between [0, message_length]        
+        MOV A1, V4 // offset
+        MOV A2, V3 // message_length
+        BL mod
+        MOV V4, A1
+        
+        ADD V5, V5, #1
+        BL PB_clear_edgecp_ASM
+        B draw
+
+reverse_direction:
+        RSB V6, V6, #0
+        BL PB_clear_edgecp_ASM
+        B loop
+
+invalid_config:
+        MOV V1, V7
+        MOV A1, #0b00111111
+        BL HEX_clear_ASM
+
+        // reset rotation count immediately and draw
+        MOV V5, #0
+        MOV A1, V5
+        BL display_rotation_count
+
+        // clear any pending rotations just to be sure
+        BL PB_clear_edgecp_ASM
+        
+        B loop
+
+
+_start:
+        BL poll
+
+stop:
+        B stop
