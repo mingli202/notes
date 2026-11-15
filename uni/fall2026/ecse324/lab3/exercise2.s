@@ -40,6 +40,8 @@ app_state:
 speeds:
         .word 0xBEBC1F, 0xA98AC6, 0x2FAF07F, 0x5F5E0FF, 0xBEBC1FF
 
+HEX_ADDR:
+        .word 0xFF200020, 0xFF200021, 0xFF200022, 0xFF200023, 0xFF200030, 0xFF200031
 
 HEX_CODES:
         .byte 0b00111111, 0b00000110, 0b01011011, 0b01001111 // 0, 1, 2, 3
@@ -73,7 +75,6 @@ MSG_TABLE:
         .word COFFEE, CAFES, CABS, ACE, MSG_8, MSG_10
 
 
-.align 2
 
 .text
 // Slider Switches Driver
@@ -234,9 +235,11 @@ disable_PB_INT_ASM:
 
         
 // display A1 with length A2 and offset A3
+// the offset is which letter should be displayed
+// in the first hex
 display_msg:
         PUSH {V1-V7, LR}
-        MOV V1, A1 // the message e.g. 0x00C0FFEE
+        MOV V1, A1 // the message address e.g. 0x00C0FFEE
         MOV V2, A2 // the message length e.g. 6
         MOV V3, #0 // current index
         MOV V4, #0xF // current mask
