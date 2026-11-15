@@ -206,8 +206,8 @@ ARM_TIM_read_INT_ASM:
         LDR A1, [A2]
 
         TST A1, #1
-        MOVEQ #0
-        MOVNE #1
+        MOVEQ A1, #0
+        MOVNE A1, #1
 
         BX LR
 
@@ -216,6 +216,8 @@ ASM_TIM_clear_INT_ASM:
         LDR A1, =INT_ST_ADDR
         MOV A2, #1
         STR A2, [A1]
+
+        BX LR
 
 _start:
         MOV V1, #0 // counter value
@@ -227,6 +229,8 @@ _start:
 
         BL ARM_TIM_config_ASM
 
+        BL HEX_clear_ASM
+
 loop:
         MOV A1, #1 // hex0
         MOV A2, V1 // counter value
@@ -234,7 +238,7 @@ loop:
  
 wait_for_interupt:
         BL ARM_TIM_read_INT_ASM
-        CMP A1 #1
+        CMP A1, #1
         BNE wait_for_interupt
 
         BL ASM_TIM_clear_INT_ASM
