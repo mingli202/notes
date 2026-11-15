@@ -353,6 +353,13 @@ next:
 
 rotate:
         ADD V4, V4, V6
+
+        // cap offset between [0, 5]
+        MOV A1, V4
+        MOV A2, #6
+        BL mod
+        MOV V4, A1
+        
         ADD V5, V5, #1
         BL PB_clear_edgecp_ASM
         B draw
