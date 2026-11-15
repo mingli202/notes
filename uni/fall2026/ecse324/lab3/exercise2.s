@@ -21,20 +21,56 @@ PB1 = 0x00000002
 PB2 = 0x00000004
 PB3 = 0x00000008
 
+BLANK = 16
+
+
 .data
+PB_int_flag:
+        .word 0x0
+
+tim_int_flag:
+        .word 0x0
+
+// speed index, is running, direction of movement, rotation count
+app_state:
+        .word 0x210 0x0
+
+// 1/16, 1/8, 1/4, 1/2, 1 seconds
+// timer ticks for x * 200e6 - 1 before raising timer interrupt
+speeds:
+        .word 0xBEBC1F, 0xA98AC6, 0x2FAF07F, 0x5F5E0FF, 0xBEBC1FF
+
+
 HEX_CODES:
         .byte 0b00111111, 0b00000110, 0b01011011, 0b01001111 // 0, 1, 2, 3
         .byte 0b01100110, 0b01101101, 0b01111101, 0b00000111 // 4, 5, 6, 7
         .byte 0b01111111, 0b01101111, 0b01110111, 0b01111100 // 8, 9, A, b
         .byte 0b00111001, 0b01011110, 0b01111001, 0b01110001 // C, d, E, F
+        .byte 0b00000000 // blank
+
+COFFEE:
+        .byte 6, 0xC, 0, 0xF, 0xF, 0xE, 0xE
+
+CAFES:
+        .byte 5, 0xC, 0xA, 0xF, 0xE, 5
+
+CABS:
+
+        .byte 4, 0xC, 0xA, 0xB, 5
+
+ACE:
+        .byte 3, 0xA, 0xC, 0xE
+
+MSG_8:
+        .byte 10, 7, 0, 0xA, 0xD, 5, 7, 0, 0, 1, 5
+
+MSG_10:
+        .byte 16, 0xC, 0xA, 0xF, 0xE, BLANK , 0xB, 0xE, 0xE, 0xF, BLANK, 0xC, 0, 0xF, 0xF, 0xE, 0xE
 
 .align 2
-HEX_ADDR:
-        .word 0xFF200020, 0xFF200021, 0xFF200022, 0xFF200023, 0xFF200030, 0xFF200031
-
-// MSG is a table where the lsb is the length of the message that follows right after
-MSG:
-        .word 0x0C0FFEE6, 0x00CAFE55, 0x000CAB54, 0x0000ACE3
+// MSG_TABLE is a table where the lsb is the length of the message that follows right after
+MSG_TABLE:
+        .word COFFEE, CAFES, CABS, ACE, MSG_8, MSG_10
 
 
 .align 2
@@ -334,6 +370,11 @@ CONFIG_GIC:
         MOV R0, #73 // KEY port (Interrupt ID = 73)
         MOV R1, #1 // this field is a bit-mask; bit 0 targets cpu0
         BL CONFIG_INTERRUPT
+
+        MOV R0, #29 // private timer port (Interrupt ID = 29)
+        MOV R1, #1 // this field is a bit-mask; bit 0 targets cpu0
+        BL CONFIG_INTERRUPT
+
         /* configure the GIC CPU Interface */
         LDR R0, =0xFFFEC100 // base address of CPU Interface
         /* Set Interrupt Priority Mask Register (ICCPMR) */
@@ -413,9 +454,13 @@ SERVICE_IRQ:
         on page 46 */
 Pushbutton_check:
         CMP R5, #73
+        BLEQ KEY_ISR
+Timer_check:
+        CMP R5, #29
+        BLEQ TIMER_ISR
 UNEXPECTED:
-        BNE UNEXPECTED // if not recognized, stop here
-        BL KEY_ISR
+        B UNEXPECTED // if not recognized, stop here
+
 EXIT_IRQ:
         /* Write to the End of Interrupt Register (ICCEOIR) */
         STR R5, [R4, #0x10] // write to ICCEOIR
@@ -425,40 +470,39 @@ EXIT_IRQ:
 SERVICE_FIQ:
         B SERVICE_FIQ
 
+// key ISR
 KEY_ISR:
-        LDR R0, =0xFF200050 // base address of pushbutton KEY port
-        LDR R1, [R0, #0xC] // read edge capture register
-        MOV R2, #0xF
-        STR R2, [R0, #0xC] // clear the interrupt
-        LDR R0, =0xFF200020 // base address of HEX display
-CHECK_KEY0:
-        MOV R3, #0x1
-        ANDS R3, R3, R1 // check for KEY0
-        BEQ CHECK_KEY1
-        MOV R2, #0b00111111
-        STR R2, [R0] // display "0"
-        B END_KEY_ISR
-CHECK_KEY1:
-        MOV R3, #0x2
-        ANDS R3, R3, R1 // check for KEY1
-        BEQ CHECK_KEY2
-        MOV R2, #0b00000110
-        STR R2, [R0] // display "1"
-        B END_KEY_ISR
-CHECK_KEY2:
-        MOV R3, #0x4
-        ANDS R3, R3, R1 // check for KEY2
-        BEQ IS_KEY3
-        MOV R2, #0b01011011
-        STR R2, [R0] // display "2"
-        B END_KEY_ISR
-IS_KEY3:
-        MOV R2, #0b01001111
-        STR R2, [R0] // display "3"
+        BL read_PB_edgecp_ASM
+        MOV V1, A1 // store the edge capture
+
+handle_key_0:
+        TST V1, PB0 // test for 0
+        BEQ handle_key_1 // skip if zero
+
+handle_key_1:
+        TST V1, PB1 // test for 1
+        BEQ handle_key_2 // skip if zero
+
+handle_key_2:
+        TST V1, PB2 // test for 2
+        BEQ handle_key_3 // skip if zero
+
+handle_key_3:
+        TST V1, PB3 // test for 2
+        BEQ END_KEY_ISR // skip if zero
+ 
 END_KEY_ISR:
         BX LR
 
+
+// timer ISR
+TIMER_ISR:
         
+
+END_TIMER_ISR:
+        BX LR
+
+// start
 _start:
         /* Set up stack pointers for IRQ and SVC processor modes */
         MOV R1, #0b11010010 // interrupts masked, MODE = IRQ
@@ -473,6 +517,12 @@ _start:
         // Or, you can call enable_PB_INT_ASM subroutine from previous task
         // to enable interrupt for ARM A9 private timer,
         // use ARM_TIM_config_ASM subroutine
+        LDR A1, =0x2FAF07F
+        LDR A2, =0b0000000000000011
+        BL ARM_TIM_config_ASM
+        MOV A1, #0xF
+        BL enable_PB_INT_ASM
+        
         LDR R0, =0xFF200050 // pushbutton KEY base address
         MOV R1, #0xF // set interrupt mask bits
         STR R1, [R0, #0x8] // interrupt mask register (base + 8)
@@ -480,7 +530,7 @@ _start:
         MOV R0, #0b01010011 // IRQ unmasked, MODE = SVC
         MSR CPSR_c, R0
 
-        
+me:
         MOV V1, #0 // counter value
 
         // initial load value, 49 999 999, so timer finishes every 0.25 seconds
