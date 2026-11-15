@@ -1,5 +1,10 @@
 .global _start
 
+PB0 = 0x00000001
+PB1 = 0x00000002
+PB2 = 0x00000004
+PB3 = 0x00000008
+
 .data
 HEX_CODES:
         .byte 0b00111111, 0b00000110, 0b01011011, 0b01001111 // 0, 1, 2, 3
@@ -172,7 +177,7 @@ disable_PB_INT_ASM:
         STR A3, [A2, #0x8]
         BX LR
 
-// display A1 with length A2
+// display A1 with length A2 and offset A3
 display_msg:
         PUSH {V1-V7, LR}
         MOV V1, A1 // the message e.g. 0x00C0FFEE
@@ -191,7 +196,7 @@ loop_display_msg:
         
         ADD V7, V3, V6 // add the offset
         MOV A1, V7
-        MOV A2, V2
+        MOV A2, #6 // hardcode the display's length
         BL mod // mod the index
         MOV V7, A1 // put back the index
          
@@ -210,25 +215,6 @@ loop_display_msg:
 
 done_display_msg:
         POP {V1-V7, LR}
-        BX LR
-
-// returns (A1 + 1) and loops back to 0 if result is equal A2
-next_index:
-        ADD A1, A1, #1
-        CMP A1, A2
-        MOVGE A1, #0
-        
-        BX LR
-
-        
-// returns (A1 - 1) and loops back to (A2 - 1) if result is < 0
-prev_index:
-        SUBS A1, A1, #1
-        SUB A2, A2, #1
-
-        CMP A1, #0
-        MOVLT A1, A2
-        
         BX LR
 
 // A1 mod A2
@@ -250,11 +236,69 @@ mod_sub:
         SUB A1, A1, A2
         B mod
 
+// returns the message and length
+// at A1
+// returns A1: message, A2: length
+get_message:
+        LSL A1, A1, #2
+        LDR A2, =MSG
+        LDR A1, [A2, A1]
+        AND A2, A1, #0xF // get the last byte
+        LSR A1, A1, #4 // remove the last byte
+        BX LR
+
+// the main loop
+poll:
+        PUSH {V1-V8, LR}
+        MOV V1, #0 // message index
+
+        MOV A1, V1
+        BL get_message
+        MOV V2, A1 // message
+        MOV V3, A2 // length
+        
+        MOV V4, #0 // current offset
+        MOV V5, #0 // rotation count
+
+        
+draw:
+        MOV A1, V2
+        MOV A2, V3
+        MOV A3, V4
+        BL display_msg       
+
+loop:
+        LDR A1, =PB3
+        BL PB_edgecp_is_pressed_ASM
+        CMP A1, #1
+        BEQ rotate_left
+
+        LDR A1, =PB2
+        BL PB_edgecp_is_pressed_ASM
+        CMP A1, #1
+        BEQ rotate_right
+
+        B loop
+rotate_left:
+        ADD V4, V4, #1
+        ADD V5, V5, #1
+        BL PB_clear_edgecp_ASM
+        B draw
+
+rotate_right:
+        SUB V4, V4, #1
+        ADD V5, V5, #1
+        BL PB_clear_edgecp_ASM
+        B draw
+
+poll_done:
+        B loop
+
+        POP {V1-V8, LR}
+        BX LR
+
 _start:
-        LDR A1, =#0x00C0FFEE
-        MOV A2, #6
-        MOV A3, #3
-        BL display_msg
+        BL poll
 
 stop:
         B stop
