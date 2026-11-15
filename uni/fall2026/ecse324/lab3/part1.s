@@ -174,11 +174,12 @@ disable_PB_INT_ASM:
 
 // display A1 with length A2
 display_msg:
-        PUSH {V1-V5, LR}
+        PUSH {V1-V7, LR}
         MOV V1, A1 // the message e.g. 0x00C0FFEE
         MOV V2, A2 // the message length e.g. 6
         MOV V3, #0 // current index
         MOV V4, #0xF // current mask
+        MOV V6, A3 // offset
 
         // clear the display first
         MOV A1, #0b00111111
@@ -187,30 +188,72 @@ display_msg:
 loop_display_msg:
         CMP V3, V2
         BGE done_display_msg // done if index >= length
+        
+        ADD V7, V3, V6 // add the offset
+        MOV A1, V7
+        MOV A2, V2
+        BL mod // mod the index
+        MOV V7, A1 // put back the index
+         
+        MOV A1, #1
+        LSL A1, A1, V7 // shift hex index by current index to light the right one 
 
         AND A2, V1, V4 // and to get byte
         LSL V5, V3, #2
         LSR A2, A2, V5 // shift it back to be 0x0000000{byte}
 
-        MOV A1, #1
-        LSL A1, A1, V3 // shift hex index by current index to light the right one 
-
         BL HEX_write_ASM
 
-        ADD V3, V3, #1
+        ADD V3, V3, #1 // increment count by 1
         LSL V4, V4, #4 // shift to the next byte
         B loop_display_msg
 
 done_display_msg:
-        POP {V1-V5, LR}
+        POP {V1-V7, LR}
         BX LR
 
-_start:
-        MOV A1, #0b00111111
-        BL HEX_clear_ASM
+// returns (A1 + 1) and loops back to 0 if result is equal A2
+next_index:
+        ADD A1, A1, #1
+        CMP A1, A2
+        MOVGE A1, #0
+        
+        BX LR
 
+        
+// returns (A1 - 1) and loops back to (A2 - 1) if result is < 0
+prev_index:
+        SUBS A1, A1, #1
+        SUB A2, A2, #1
+
+        CMP A1, #0
+        MOVLT A1, A2
+        
+        BX LR
+
+// A1 mod A2
+// assumes A2 > 0, should be since it's the length
+mod:
+        CMP A1, #0
+        BLT mod_add
+
+        CMP A1, A2
+        BGE mod_sub
+
+        BX LR
+
+mod_add:
+        ADD A1, A1, A2
+        B mod
+
+mod_sub:
+        SUB A1, A1, A2
+        B mod
+
+_start:
         LDR A1, =#0x00C0FFEE
         MOV A2, #6
+        MOV A3, #3
         BL display_msg
 
 stop:
