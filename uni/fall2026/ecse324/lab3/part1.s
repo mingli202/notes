@@ -370,7 +370,7 @@ reverse_direction:
         B loop
 
 invalid_config:
-        MOV V1, V6
+        MOV V1, V7
         MOV A1, #0b00111111
         BL HEX_clear_ASM
 
