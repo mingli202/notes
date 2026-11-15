@@ -334,7 +334,7 @@ loop:
         MOV V5, #0
 
         // clear any rotations
-        BL PB_edgecp_is_pressed_ASM
+        BL PB_clear_edgecp_ASM
 
         B draw
 
@@ -359,6 +359,7 @@ rotate:
 
 reverse_direction:
         RSB V6, V6, #0
+        BL PB_clear_edgecp_ASM
         B loop
 
 invalid_config:
@@ -372,7 +373,7 @@ invalid_config:
         BL display_rotation_count
 
         // clear any pending rotations just to be sure
-        BL PB_edgecp_is_pressed_ASM
+        BL PB_clear_edgecp_ASM
         
         B loop
 
