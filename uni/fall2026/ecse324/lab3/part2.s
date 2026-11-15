@@ -503,6 +503,8 @@ SERVICE_FIQ:
 
 // key ISR
 KEY_ISR:
+        PUSH {LR}
+
         BL read_PB_edgecp_ASM
         MOV V1, A1 // store the edge capture
 
@@ -510,22 +512,34 @@ handle_key_0:
         TST V1, PB0 // test for 0
         BEQ handle_key_1 // skip if zero
 
-        LDR A1, =speed_index
-
+        BL decrease_speed
+        
 handle_key_1:
         TST V1, PB1 // test for 1
         BEQ handle_key_2 // skip if zero
+
+        BL increase_speed
 
 handle_key_2:
         TST V1, PB2 // test for 2
         BEQ handle_key_3 // skip if zero
 
+        LDR A1, =direction
+        LDR A2, [A1]
+        RSB A2, A2, #0
+        STR A2, [A1]
+
 handle_key_3:
         TST V1, PB3 // test for 2
         BEQ END_KEY_ISR // skip if zero
+
+        LDR A1, =is_paused
+        LDR A2, [A1]
+        NOT A2, A2
+        STR A2, [A1]
  
 END_KEY_ISR:
-        BX LR
+        POP {PC}
 
 
 // timer ISR
