@@ -274,6 +274,19 @@ check_switches_index:
 check_switches_index_next:
         BX LR
 
+// displays the number A1 as a binary on the leds
+// caps the count at 1023 (2^10 - 1)
+display_rotation_count:
+        PUSH {LR}
+        LDR A2, =#1023
+
+        CMP A1, A2
+        MOVGT A1, A2
+        
+        BL write_LEDs_ASM
+        POP {LR}
+        BX LR
+
 // the main loop
 poll:
         PUSH {V1-V8, LR}
@@ -293,6 +306,8 @@ draw:
         MOV A3, V4
         BL display_msg       
 
+        MOV A1, V5
+        BL display_rotation_count
 
 loop:
         BL read_slider_switches_ASM
@@ -329,6 +344,7 @@ next:
         BEQ rotate_right
 
         B loop
+
 rotate_left:
         ADD V4, V4, #1
         ADD V5, V5, #1
