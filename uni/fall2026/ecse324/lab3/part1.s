@@ -259,8 +259,7 @@ poll:
         
         MOV V4, #0 // current offset
         MOV V5, #0 // rotation count
-
-        
+   
 draw:
         MOV A1, V2
         MOV A2, V3
@@ -268,6 +267,28 @@ draw:
         BL display_msg       
 
 loop:
+        BL read_slider_switches_ASM
+        MOV V6, A1 // read slider config
+
+        CMP V6, #3
+        BGT invalid_config // go to invalid config and skip other input handling
+
+        CMP V6, V1
+        BEQ next
+
+        MOV V1, V6 // only draw if new message
+        MOV A1, V1
+        BL get_message
+        MOV V2, A1 // message
+        MOV V3, A2 // length
+
+        // reset offset but left justify it
+        MOV V4, #6
+        SUB V4, V4, V3
+
+        B draw
+
+next:
         LDR A1, =PB3
         BL PB_edgecp_is_pressed_ASM
         CMP A1, #1
@@ -290,6 +311,12 @@ rotate_right:
         ADD V5, V5, #1
         BL PB_clear_edgecp_ASM
         B draw
+
+invalid_config:
+        MOV V1, V6 // only draw if new message
+        MOV A1, #0b00111111
+        BL HEX_clear_ASM
+        B loop
 
 poll_done:
         B loop
