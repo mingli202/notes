@@ -17,6 +17,24 @@ ARM_TIM_config_ASM:
     
     BX LR
 
+// returns the F value
+// from the A9 private timer interrupt status register
+// returns strictly 0 or 1 without anything before it
+ARM_TIM_read_INT_ASM:
+    LDR A2, =INT_ST_ADDR
+    LDR A1, [A2]
+
+    TST A1, #1
+    MOVEQ #0
+    MOVNE #1
+
+    BX LR
+
+// clears the 'F' value by writing a #1 to it
+ASM_TIM_clear_INT_ASM:
+    LDR A1, =INT_ST_ADDR
+    MOV A2, #1
+    STR A2, [A1]
 
 _start:
     LDR A1, =10
