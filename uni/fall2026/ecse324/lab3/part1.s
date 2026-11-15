@@ -20,6 +20,11 @@ HEX_ADDR:
 MSG:
         .word 0x0C0FFEE6, 0x00CAFE55, 0x000CAB54, 0x0000ACE3
 
+MSG_SLIDER_MAP:
+        .byte 0, 1, 5, 3
+
+.align 2
+
 .text
 // Slider Switches Driver
 // returns the state of slider switches in A1
@@ -247,6 +252,28 @@ get_message:
         LSR A1, A1, #4 // remove the last byte
         BX LR
 
+        
+// check if the switches index is 0, 1, 2, or 4
+// A1: switches to check
+check_switches_index:
+        MOV A2, #4 // return value and index of message
+
+        CMP A1, #0
+        BEQ check_switches_index_next;
+
+        CMP A1, #1
+        BEQ check_switches_index_next;
+
+        CMP A1, #2
+        BEQ check_switches_index_next;
+
+        CMP A1, #4
+        MOVEQ A1, #3
+        MOVNE A1, #4
+
+check_switches_index_next:
+        BX LR
+
 // the main loop
 poll:
         PUSH {V1-V8, LR}
@@ -266,9 +293,11 @@ draw:
         MOV A3, V4
         BL display_msg       
 
+
 loop:
         BL read_slider_switches_ASM
-        MOV V6, A1 // read slider config
+        BL check_switches_index
+        MOV V6, A1
 
         CMP V6, #3
         BGT invalid_config // go to invalid config and skip other input handling
