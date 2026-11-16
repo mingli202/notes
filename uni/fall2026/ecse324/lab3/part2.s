@@ -33,7 +33,7 @@ PB_int_flag:
 tim_int_flag:
         .word 0x0
 
-// 1/16, 1/8, 1/4, 1/2, 1 seconds
+// 1, 1/2, 1/4, 1/8, 1/16  seconds
 // timer ticks for x * 200e6 - 1 before raising timer interrupt
 speeds:
         .word 0xBEBC1FF, 0x5F5E0FF, 0x2FAF07F, 0x17D783F, 0xBEBC1F
@@ -83,7 +83,6 @@ current_offset: .word 0x0
 direction: .word 1
 is_paused: .word 0 // 0 is false
 speed_index: .word 2 // speed
-speed: .word 0x0 // the current speed
 
 .text
 // Slider Switches Driver
@@ -474,12 +473,12 @@ Pushbutton_check:
         CMP R5, #73
         BNE Timer_check
         BL KEY_ISR
-        B EXIT_IQR
+        B EXIT_IRQ
 Timer_check:
         CMP R5, #29
         BNE UNEXPECTED
         BL ARM_TIM_ISR
-        B EXIT_IQR
+        B EXIT_IRQ
 UNEXPECTED:
         B UNEXPECTED // if not recognized, stop here
 
@@ -499,7 +498,11 @@ KEY_ISR:
 
         BL read_PB_edgecp_ASM
         LDR A2, =PB_int_flag
-        STR A1, [A2]
+        LDR A3, [A2] // A3 = current flag value
+        ORR A3, A3, A1 // or the values to keep uncleared ones
+
+        STR A3, [A2]
+        BL PB_clear_edgecp_ASM
         
         POP {PC}
 
@@ -511,6 +514,7 @@ ARM_TIM_ISR:
         LDR A1, =tim_int_flag
         MOV A2, #1
         STR A2, [A1] // store 1 into it
+        BL ARM_TIM_clear_INT_ASM
         
         POP {PC}
 
@@ -579,22 +583,24 @@ update_message:
 // updates the current speed based on the current speed index
 // will also update the timer configuration
 update_speed:
+        PUSH {LR}
         LDR A1, =speed_index
         LDR A1, [A1] // A1 is the index
 
         LSL A1, A1, #2
 
         LDR A2, =speeds
-        LDR A3, =speed
 
         LDR A4, [A2, A1]
-        STR A4, [A3] // store the speed
 
         // write to load so the next timer countdown is updated
         LDR A3, =LOAD_ADDR
         STR A4, [A3]
 
-        BR LR
+        // display the new speed
+        BL display_speed_leds
+
+        POP {PC}
 
 // increase the speed, but caps at the end of the array
 increase_speed:
@@ -636,8 +642,10 @@ decrease_speed:
 handle_key:
         PUSH {V1, LR}
 
-        MOV A1, =PB_int_flag
-        MOV V1, [A1] // store the edge capture
+        LDR A1, =PB_int_flag
+        LDR V1, [A1] // store the edge capture
+        MOV A2, #0
+        STR A2, [A1] // clear edge capture immediately
 
         // key2 has no effect if paused
         LDR A1, =is_paused
@@ -676,7 +684,6 @@ handle_key_3:
         STR A2, [A1]
  
 end_handle_key:
-        BL PB_clear_edgecp_ASM
         POP {V1, PC}
 
 // handles the timer
@@ -692,8 +699,6 @@ handle_timer:
         MOV A2, #0
         STR A2, [A1] // clear the flag
         
-        BL ARM_TIM_clear_INT_ASM
-
         // if paused, also don't do anything
         LDR A1, =is_paused
         LDR A1, [A1]
@@ -712,14 +717,23 @@ end_handle_timer:
 display_speed_leds:
         PUSH {LR}
 
+        // clear all the leds when paused
+        LDR A1, =is_paused
+        LDR A1, [A1]
+        CMP A1, #1
+        MOVEQ A1, #0
+        BEQ write_leds
+
         LDR A2, =speed_index
         LDR A2, [A2] // A2 = speed index
+        RSB A2, A2, #4
+        LSL A2, A2, #1
 
         // right shift the full leds by the index times 2
-        LSL A2, A2, #1
-        MOV A1, 0b1111111111
-        LSR A1, A2
+        LDR A1, =0x3FF
+        LSR A1, A1, A2
 
+write_leds:
         BL write_LEDs_ASM
 
         POP {PC}
@@ -761,20 +775,20 @@ init_state:
 
         BL update_message
         BL draw_current_message
+        BL display_speed_leds
 
 IDLE:
         // This is where you write your main program task(s)
-        BL display_speed_leds
-
         BL read_slider_switches_ASM
         BL check_switches_index
         LDR A2, [V1] // A2 = the current msg index
 
         CMP A2, A1
-        BNE IDLE_handle_key // don't update if it's not new
+        BEQ IDLE_handle_key // don't update if it's not new
         
         STR A1, [V1]
         BL update_message
+        BL draw_current_message
 
 IDLE_handle_key:
         BL handle_key
