@@ -36,7 +36,7 @@ tim_int_flag:
 // 1/16, 1/8, 1/4, 1/2, 1 seconds
 // timer ticks for x * 200e6 - 1 before raising timer interrupt
 speeds:
-        .word 0xBEBC1F, 0xA98AC6, 0x2FAF07F, 0x5F5E0FF, 0xBEBC1FF
+        .word 0xBEBC1FF, 0x5F5E0FF, 0x2FAF07F, 0x17D783F, 0xBEBC1F
 
 HEX_ADDR:
         .word 0xFF200031,  0xFF200030, 0xFF200023, 0xFF200022, 0xFF200021, 0xFF200020
@@ -80,7 +80,6 @@ msg_index: .word 0x0 // if index = 6 then it's invalid
 msg: .word 0x0
 msg_length: .word 0x0
 current_offset: .word 0x0
-rotation_count: .word 0x0
 direction: .word 1
 is_paused: .word 0 // 0 is false
 speed_index: .word 2 // speed
@@ -329,7 +328,7 @@ check_switches_index:
         MOV A3, #1 // index
 
 check_switches_index_loop:
-        CMP A3, INVALID_INDEX 
+        CMP A3, #INVALID_INDEX 
         BEQ check_switches_index_done
 
         CMP A1, A2
@@ -343,18 +342,6 @@ check_switches_index_done:
         MOV A1, A3
         BX LR
 
-// displays the number A1 as a binary on the leds
-// caps the count at 1023 (2^10 - 1)
-display_rotation_count:
-        PUSH {LR}
-        LDR A2, =1023
-
-        CMP A1, A2
-        MOVGT A1, A2
-        
-        BL write_LEDs_ASM
-        POP {LR}
-        BX LR
 
 
 // configures the private timer
@@ -383,7 +370,7 @@ ARM_TIM_read_INT_ASM:
         BX LR
 
 // clears the 'F' value by writing a #1 to it
-ASM_TIM_clear_INT_ASM:
+ARM_TIM_clear_INT_ASM:
         LDR A1, =INT_ST_ADDR
         MOV A2, #1
         STR A2, [A1]
@@ -485,10 +472,14 @@ SERVICE_IRQ:
         on page 46 */
 Pushbutton_check:
         CMP R5, #73
-        BLEQ KEY_ISR
+        BNE Timer_check
+        BL KEY_ISR
+        B EXIT_IQR
 Timer_check:
         CMP R5, #29
-        BLEQ TIMER_ISR
+        BNE UNEXPECTED
+        BL ARM_TIM_ISR
+        B EXIT_IQR
 UNEXPECTED:
         B UNEXPECTED // if not recognized, stop here
 
@@ -502,83 +493,26 @@ SERVICE_FIQ:
         B SERVICE_FIQ
 
 // key ISR
+// reads edge capture and stores it in PB_int_flag
 KEY_ISR:
-        PUSH {V1, LR}
-
-        // don't do anything if switches is invalid
-        LDR A1, =msg_index
-        LDR A1, [A1]
-        CMP A1, INVALID_INDEX 
-        BEQ END_KEY_ISR
+        PUSH {LR}
 
         BL read_PB_edgecp_ASM
-        MOV V1, A1 // store the edge capture
-
-handle_key_0:
-        TST V1, PB0 // test for 0
-        BEQ handle_key_1 // skip if zero
-
-        BL decrease_speed
+        LDR A2, =PB_int_flag
+        STR A1, [A2]
         
-handle_key_1:
-        TST V1, PB1 // test for 1
-        BEQ handle_key_2 // skip if zero
-
-        BL increase_speed
-
-handle_key_2:
-        TST V1, PB2 // test for 2
-        BEQ handle_key_3 // skip if zero
-
-        // key2 has no effect if paused
-        LDR A1, =is_paused
-        LDR A2, [A1]
-        CMP A2, #1
-        BEQ handle_key_3
-
-        LDR A1, =direction
-        LDR A2, [A1]
-        RSB A2, A2, #0
-        STR A2, [A1]
-
-handle_key_3:
-        TST V1, PB3 // test for 2
-        BEQ END_KEY_ISR // skip if zero
-
-        LDR A1, =is_paused
-        LDR A2, [A1]
-        NOT A2, A2
-        STR A2, [A1]
- 
-END_KEY_ISR:
-        BL PB_clear_edgecp_ASM
-        POP {V1, PC}
+        POP {PC}
 
 
 // timer ISR
-TIMER_ISR:
+ARM_TIM_ISR:
         PUSH {LR}
-        BL ASM_TIM_clear_INT_ASM
 
-        // don't do anything if switches is invalid
-        LDR A1, =msg_index
-        LDR A1, [A1]
-        CMP A1, INVALID_INDEX
-        BEQ END_TIMER_ISR
-
-        // if paused, also don't do anything
-        LDR A1, =is_paused
-        LDR A1, [A1]
-        CMP A1, #1
-        BEQ END_TIMER_ISR
-
+        LDR A1, =tim_int_flag
+        MOV A2, #1
+        STR A2, [A1] // store 1 into it
         
-        BL increment_offset
-        BL draw_current_message
-
-END_TIMER_ISR:
-        POP {LR}
-        BX LR
+        POP {PC}
 
 
 // draw the current message
@@ -591,12 +525,14 @@ draw_current_message:
         LDR A3, =msg_length
         LDR A2, [A3] // A2 = msg_length
 
-        BL HEX_write_ASM
+        LDR A3, =current_offset
+        LDR A3, [A3] // A3 = current_offset
+
+        BL display_msg
 
         POP {PC}
 
 // increments the offset by the direction
-// also increases the rotation_count
 // loops back to 0 if more or less than length
 increment_offset:
         PUSH {V1-V5, LR}
@@ -614,12 +550,6 @@ increment_offset:
 
         BL mod // A1 mod A2
         STR A1, [V1] // store A1 back into [V1]
-
-increase_rotation_count:
-        LDR A1, =rotation_count
-        LDR A2, [A1]
-        ADD A2, A2, #1
-        STR A2, [A1]
 
         POP {V1-V5, PC}
 
@@ -640,6 +570,10 @@ update_message:
         LDR A3, =msg_length
         STR A2, [A3]
 
+        MOV A4, #0
+        LDR A3, =current_offset
+        STR A4, [A3] // reset the current offset
+
         POP {PC}
         
 // updates the current speed based on the current speed index
@@ -659,6 +593,8 @@ update_speed:
         // write to load so the next timer countdown is updated
         LDR A3, =LOAD_ADDR
         STR A4, [A3]
+
+        BR LR
 
 // increase the speed, but caps at the end of the array
 increase_speed:
@@ -695,6 +631,100 @@ decrease_speed:
         POP {LR}
         BX LR
 
+        
+// handle_key
+handle_key:
+        PUSH {V1, LR}
+
+        MOV A1, =PB_int_flag
+        MOV V1, [A1] // store the edge capture
+
+        // key2 has no effect if paused
+        LDR A1, =is_paused
+        LDR A2, [A1]
+        CMP A2, #1
+        BEQ handle_key_3
+
+handle_key_0:
+        TST V1, #PB0 // test for 0
+        BEQ handle_key_1 // skip if zero
+
+        BL decrease_speed
+        
+handle_key_1:
+        TST V1, #PB1 // test for 1
+        BEQ handle_key_2 // skip if zero
+
+        BL increase_speed
+
+handle_key_2:
+        TST V1, #PB2 // test for 2
+        BEQ handle_key_3 // skip if zero
+
+        LDR A1, =direction
+        LDR A2, [A1]
+        RSB A2, A2, #0
+        STR A2, [A1]
+
+handle_key_3:
+        TST V1, #PB3 // test for 2
+        BEQ end_handle_key // skip if zero
+
+        LDR A1, =is_paused
+        LDR A2, [A1]
+        EOR A2, A2, #1
+        STR A2, [A1]
+ 
+end_handle_key:
+        BL PB_clear_edgecp_ASM
+        POP {V1, PC}
+
+// handles the timer
+handle_timer:
+        PUSH {LR}
+
+        LDR A1, =tim_int_flag
+        LDR A2, [A1] // read the flag
+        CMP A2, #0 // go out if nothing new
+        BEQ end_handle_timer
+        
+        // otherwise handle it and clear the flag
+        MOV A2, #0
+        STR A2, [A1] // clear the flag
+        
+        BL ARM_TIM_clear_INT_ASM
+
+        // if paused, also don't do anything
+        LDR A1, =is_paused
+        LDR A1, [A1]
+        CMP A1, #1
+        BEQ end_handle_timer
+
+        
+        BL increment_offset
+        BL draw_current_message
+
+end_handle_timer:
+        POP {LR}
+        BX LR
+
+// displays the speed leds
+display_speed_leds:
+        PUSH {LR}
+
+        LDR A2, =speed_index
+        LDR A2, [A2] // A2 = speed index
+
+        // right shift the full leds by the index times 2
+        LSL A2, A2, #1
+        MOV A1, 0b1111111111
+        LSR A1, A2
+
+        BL write_LEDs_ASM
+
+        POP {PC}
+
+
 // start
 _start:
         /* Set up stack pointers for IRQ and SVC processor modes */
@@ -725,11 +755,32 @@ _start:
 
 init_state:
         // set message index to 0
-        LDR A2, =msg_index
+        LDR V1, =msg_index // msg_index addr
         MOV A1, #0
-        STR A1, [A2]
+        STR A1, [v1]
 
         BL update_message
+        BL draw_current_message
 
 IDLE:
-        B IDLE // This is where you write your main program task(s)                               
+        // This is where you write your main program task(s)
+        BL display_speed_leds
+
+        BL read_slider_switches_ASM
+        BL check_switches_index
+        LDR A2, [V1] // A2 = the current msg index
+
+        CMP A2, A1
+        BNE IDLE_handle_key // don't update if it's not new
+        
+        STR A1, [V1]
+        BL update_message
+
+IDLE_handle_key:
+        BL handle_key
+
+IDLE_handle_timer:
+        BL handle_timer
+
+IDLE_next:
+        B IDLE
