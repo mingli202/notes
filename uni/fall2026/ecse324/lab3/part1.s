@@ -58,7 +58,7 @@ HEX_clear_ASM:
 HEX_flood_ASM:
         PUSH {LR}
 
-        MOV A2, #0b011111111
+        MOV A2, #0b001111111
         BL HEX_write_raw
 
         POP {LR}
@@ -254,8 +254,6 @@ get_message:
 // check if the switches index is 0, 1, 2, or 4
 // A1: switches to check
 check_switches_index:
-        MOV A2, #4 // return value and index of message
-
         CMP A1, #0
         BEQ check_switches_index_next;
 
@@ -285,8 +283,24 @@ display_rotation_count:
         POP {LR}
         BX LR
 
+        
+// draw the massage
+// A1: message
+// A2: message length
+// A3: offset
+// A4: rotation_count
+draw:
+        PUSH {LR}
+        BL display_msg       
+
+        MOV A1, A4
+        BL display_rotation_count
+        POP {PC}
+
 // the main loop
-poll:
+poll:        
+        BL PB_clear_edgecp_ASM
+
         PUSH {V1-V8, LR}
         MOV V1, #0 // message index
 
@@ -299,14 +313,11 @@ poll:
         MOV V5, #0 // rotation count
         MOV V6, #1 // direction
    
-draw:
         MOV A1, V2
         MOV A2, V3
         MOV A3, V4
-        BL display_msg       
-
-        MOV A1, V5
-        BL display_rotation_count
+        MOV A4, V5
+        BL draw
 
 loop:
         BL read_slider_switches_ASM
@@ -318,7 +329,7 @@ loop:
 
         // draw message if new
         CMP V7, V1
-        BEQ next
+        BEQ rotate
 
         MOV V1, V7
         MOV A1, V1
@@ -336,24 +347,25 @@ loop:
         // clear any rotations
         BL PB_clear_edgecp_ASM
 
-        B draw
-
-next:
-        LDR A1, =PB3
-        BL PB_edgecp_is_pressed_ASM
-        CMP A1, #1
-        BEQ rotate
-
-        LDR A1, =PB2
-        BL PB_edgecp_is_pressed_ASM
-        CMP A1, #1
-        BEQ reverse_direction
-
-        B loop
-
+        
+        MOV A1, V2
+        MOV A2, V3
+        MOV A3, V4
+        MOV A4, V5
+        BL draw
+        
 rotate:
-        ADD V4, V4, V6
+        BL read_PB_edgecp_ASM
+        MOV V8, A1 // V8 is the pressed buttons
 
+        // clear what I just read
+        LDR A2, =PUSH_BTN_ADDR
+        STR V8, [A2, #0xC]
+
+        TST V8, #PB3
+        BEQ reverse_direction 
+
+        ADD V4, V4, V6
         // cap offset between [0, 5]
         MOV A1, V4
         MOV A2, #6
@@ -361,12 +373,21 @@ rotate:
         MOV V4, A1
         
         ADD V5, V5, #1
-        BL PB_clear_edgecp_ASM
-        B draw
+
+        MOV A1, V2
+        MOV A2, V3
+        MOV A3, V4
+        MOV A4, V5
+        BL draw
+
 
 reverse_direction:
+        TST V8, #PB2
+        BEQ next
+   
         RSB V6, V6, #0
-        BL PB_clear_edgecp_ASM
+
+next:
         B loop
 
 invalid_config:
@@ -383,7 +404,6 @@ invalid_config:
         BL PB_clear_edgecp_ASM
         
         B loop
-
 
 _start:
         BL poll
