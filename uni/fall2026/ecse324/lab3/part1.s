@@ -290,12 +290,13 @@ display_rotation_count:
 // A3: offset
 // A4: rotation_count
 draw:
-        PUSH {LR}
+        PUSH {V1, LR}
+        MOV V1, A4
         BL display_msg       
 
-        MOV A1, A4
+        MOV A1, V1
         BL display_rotation_count
-        POP {PC}
+        POP {V1, PC}
 
 // the main loop
 poll:        
