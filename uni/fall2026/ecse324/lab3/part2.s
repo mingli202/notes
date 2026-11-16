@@ -23,6 +23,8 @@ PB3 = 0x00000008
 
 BLANK = 16
 
+INVALID_INDEX = 6
+
 
 .data
 PB_int_flag:
@@ -64,14 +66,17 @@ MSG_8:
 MSG_10:
         .byte 16, 0xC, 0xA, 0xF, 0xE, BLANK , 0xB, 0xE, 0xE, 0xF, BLANK, 0xC, 0, 0xF, 0xF, 0xE, 0xE
 
+INVALID:
+        .byte 6, BLANK, BLANK, BLANK, BLANK, BLANK, BLANK
+
 .align 2
 // MSG_TABLE is a table where the lsb is the length of the message that follows right after
 MSG_TABLE:
-        .word COFFEE, CAFES, CABS, ACE, MSG_8, MSG_10
+        .word COFFEE, CAFES, CABS, ACE, MSG_8, MSG_10, INVALID
 
 
 // app state
-msg_index: .word 0x0
+msg_index: .word 0x0 // if index = 6 then it's invalid
 msg: .word 0x0
 msg_length: .word 0x0
 current_offset: .word 0x0
@@ -315,7 +320,7 @@ get_message:
 // check if the switches index is 0, 1, 2, 4, 8 or 10
 // A1: switches to check
 // returns A1: index of the message table
-// -1 if invalid index
+// #6 if invalid, the last one
 check_switches_index:
         CMP A1, #0
         BXEQ LR;
@@ -324,8 +329,8 @@ check_switches_index:
         MOV A3, #1 // index
 
 check_switches_index_loop:
-        CMP A2, #0x10
-        BGT check_switches_index_invalid
+        CMP A3, INVALID_INDEX 
+        BEQ check_switches_index_done
 
         CMP A1, A2
         BEQ check_switches_index_done
@@ -334,11 +339,6 @@ check_switches_index_loop:
         ADD A3, A3, #1
         B  check_switches_index_loop
         
-check_switches_index_invalid:
-        MOV A1, #1
-        RSB A1, A1, #0
-        BX LR
-
 check_switches_index_done:
         MOV A1, A3
         BX LR
@@ -503,7 +503,13 @@ SERVICE_FIQ:
 
 // key ISR
 KEY_ISR:
-        PUSH {LR}
+        PUSH {V1, LR}
+
+        // don't do anything if switches is invalid
+        LDR A1, =msg_index
+        LDR A1, [A1]
+        CMP A1, INVALID_INDEX 
+        BEQ END_KEY_ISR
 
         BL read_PB_edgecp_ASM
         MOV V1, A1 // store the edge capture
@@ -524,6 +530,12 @@ handle_key_2:
         TST V1, PB2 // test for 2
         BEQ handle_key_3 // skip if zero
 
+        // key2 has no effect if paused
+        LDR A1, =is_paused
+        LDR A2, [A1]
+        CMP A2, #1
+        BEQ handle_key_3
+
         LDR A1, =direction
         LDR A2, [A1]
         RSB A2, A2, #0
@@ -539,15 +551,33 @@ handle_key_3:
         STR A2, [A1]
  
 END_KEY_ISR:
-        POP {PC}
+        BL PB_clear_edgecp_ASM
+        POP {V1, PC}
 
 
 // timer ISR
 TIMER_ISR:
-        BX LR
+        PUSH {LR}
+        BL ASM_TIM_clear_INT_ASM
+
+        // don't do anything if switches is invalid
+        LDR A1, =msg_index
+        LDR A1, [A1]
+        CMP A1, INVALID_INDEX
+        BEQ END_TIMER_ISR
+
+        // if paused, also don't do anything
+        LDR A1, =is_paused
+        LDR A1, [A1]
+        CMP A1, #1
+        BEQ END_TIMER_ISR
+
         
+        BL increment_offset
+        BL draw_current_message
 
 END_TIMER_ISR:
+        POP {LR}
         BX LR
 
 
